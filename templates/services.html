@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="services-page">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="display-5 fw-bold" style="color: var(--text-primary);">📋 Все услуги</h1>
+                <p class="text-muted">Нажмите на название услуги или на стрелку, чтобы увидеть детали</p>
+                <hr class="w-50 mx-auto" style="border-color: var(--border-light);">
+            </div>
+        </div>
+
+        {% set categories = {} %}
+        {% for service in services %}
+            {% if service.category not in categories %}
+                {% set _ = categories.update({service.category: []}) %}
+            {% endif %}
+            {% set _ = categories[service.category].append(service) %}
+        {% endfor %}
+
+        <div class="category-accordion">
+            {% for category, services_in_cat in categories.items() %}
+                <div class="category-item">
+                    <div class="category-header" data-target="cat-{{ category }}">
+                        <div class="category-title">
+                            <span class="category-icon">
+                                {% if category == 'telegram' %}<i class="fab fa-telegram-plane"></i>
+                                {% elif category == 'vk' %}<i class="fab fa-vk"></i>
+                                {% elif category == 'instagram' %}<i class="fab fa-instagram"></i>
+                                {% elif category == 'tiktok' %}<i class="fab fa-tiktok"></i>
+                                {% elif category == 'youtube' %}<i class="fab fa-youtube"></i>
+                                {% else %}<i class="fas fa-globe"></i>{% endif %}
+                            </span>
+                            <span class="category-name">{{ category|capitalize }}</span>
+                            <span class="category-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                    </div>
+                    <div class="category-body" id="cat-{{ category }}">
+                        <div class="services-list">
+                            {% for service in services_in_cat %}
+                                <div class="service-item">
+                                    <div class="service-header" data-target="service-{{ service.id }}">
+                                        <div class="service-title">
+                                            <span class="service-name">{{ service.name }}</span>
+                                            <span class="service-arrow" data-target="service-{{ service.id }}">
+                                                <i class="fas fa-chevron-down"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="service-body" id="service-{{ service.id }}">
+                                        <div class="service-content">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-5">
+                                                    <p class="service-description">{{ service.description }}</p>
+                                                    <div class="service-meta">
+                                                        <span class="badge"><i class="far fa-clock"></i> 24ч</span>
+                                                        <span class="badge"><i class="fas fa-check-circle"></i> Гарантия</span>
+                                                        {% if loop.index == 1 %}<span class="badge">⭐ Популярно</span>
+                                                        {% elif loop.index == 2 %}<span class="badge">🔥 Новинка</span>{% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="service-price-wrapper">
+                                                        <span class="service-price">{{ service.price }} ₽</span>
+                                                        <span class="price-unit">за 1000</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3 text-md-end">
+                                                    <a href="{{ url_for('order', service_id=service.id) }}" class="btn btn-order">
+                                                        Заказать <i class="fas fa-arrow-right ms-1"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryHeaders = document.querySelectorAll('.category-header');
+        categoryHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const targetId = this.dataset.target;
+                const body = document.getElementById(targetId);
+                const arrow = this.querySelector('.category-arrow i');
+                toggleElement(body, arrow);
+            });
+        });
+
+        const serviceHeaders = document.querySelectorAll('.service-header');
+        serviceHeaders.forEach(header => {
+            header.addEventListener('click', function(e) {
+                if (e.target.closest('.service-arrow')) return;
+                const targetId = this.dataset.target;
+                const body = document.getElementById(targetId);
+                const arrow = this.querySelector('.service-arrow i');
+                toggleService(body, arrow, this);
+            });
+        });
+
+        const arrows = document.querySelectorAll('.service-arrow');
+        arrows.forEach(arrow => {
+            arrow.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const targetId = this.dataset.target;
+                const body = document.getElementById(targetId);
+                const header = this.closest('.service-header');
+                const arrowIcon = this.querySelector('i');
+                toggleService(body, arrowIcon, header);
+            });
+        });
+
+        function toggleElement(body, arrow) {
+            if (!body) return;
+            const isActive = body.classList.contains('active');
+            document.querySelectorAll('.category-body').forEach(b => {
+                if (b.id !== body.id) {
+                    b.classList.remove('active');
+                    const arrowOther = b.closest('.category-item').querySelector('.category-arrow i');
+                    if (arrowOther) arrowOther.className = 'fas fa-chevron-down';
+                }
+            });
+            if (isActive) {
+                body.classList.remove('active');
+                if (arrow) arrow.className = 'fas fa-chevron-down';
+            } else {
+                body.classList.add('active');
+                if (arrow) arrow.className = 'fas fa-chevron-up';
+            }
+        }
+
+        function toggleService(body, arrow, header) {
+            if (!body) return;
+            const isActive = body.classList.contains('active');
+            const parentList = header ? header.closest('.services-list') : body.closest('.services-list');
+            if (parentList) {
+                parentList.querySelectorAll('.service-body').forEach(b => {
+                    if (b.id !== body.id) {
+                        b.classList.remove('active');
+                        const arrowOther = b.closest('.service-item').querySelector('.service-arrow i');
+                        if (arrowOther) arrowOther.className = 'fas fa-chevron-down';
+                    }
+                });
+            }
+            if (isActive) {
+                body.classList.remove('active');
+                if (arrow) arrow.className = 'fas fa-chevron-down';
+            } else {
+                body.classList.add('active');
+                if (arrow) arrow.className = 'fas fa-chevron-up';
+            }
+        }
+
+        const firstCategory = document.querySelector('.category-body');
+        if (firstCategory) {
+            firstCategory.classList.add('active');
+            const arrow = firstCategory.closest('.category-item').querySelector('.category-arrow i');
+            if (arrow) arrow.className = 'fas fa-chevron-up';
+        }
+    });
+</script>
+{% endblock %}

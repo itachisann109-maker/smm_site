@@ -1,0 +1,113 @@
+/* ============================================================
+   ПЕРЕМЕННЫЕ ТЕМЫ
+   ============================================================ */
+:root {
+    --bg-body: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --bg-code: #f1f3f5;
+    --bg-hover: #f1f3f5;
+    --bg-active: #e9ecef;
+    --bg-navbar: #ffffff;
+    --bg-footer: #f8f9fa;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-muted: #6c757d;
+    --border-light: #dee2e6;
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --icon-color: #6c757d;
+    --btn-dark-bg: #212529;
+    --btn-dark-text: #ffffff;
+    --link-color: #0d6efd;
+    --rating-star: #ffc107;
+    --rating-star-empty: #dee2e6;
+    --close-filter: none;
+}
+
+[data-theme="dark"] {
+    --bg-body: #121212;
+    --bg-card: #1e1e1e;
+    --bg-input: #2d2d2d;
+    --bg-code: #2d2d2d;
+    --bg-hover: #2d2d2d;
+    --bg-active: #3d3d3d;
+    --bg-navbar: #1a1a1a;
+    --bg-footer: #1a1a1a;
+    --text-primary: #e9ecef;
+    --text-secondary: #ced4da;
+    --text-muted: #adb5bd;
+    --border-light: #3d3d3d;
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --icon-color: #adb5bd;
+    --btn-dark-bg: #f8f9fa;
+    --btn-dark-text: #212529;
+    --link-color: #6ea8fe;
+    --rating-star: #ffc107;
+    --rating-star-empty: #3d3d3d;
+    --close-filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Навигация */
+.navbar {
+    background-color: var(--bg-navbar) !important;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.navbar .nav-link {
+    color: var(--text-secondary) !important;
+}
+
+.navbar .nav-link:hover {
+    color: var(--text-primary) !important;
+}
+
+.navbar-brand {
+    color: var(--text-primary) !important;
+}
+
+/* Карточки */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+}
+
+/* Формы */
+.form-control {
+    background-color: var(--bg-input);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+}
+
+.form-control:focus {
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Футер */
+footer {
+    background-color: var(--bg-footer);
+    border-top: 1px solid var(--border-light);
+    padding: 20px 0;
+    color: var(--text-secondary);
+}
+
+/* Чат-бот */
+#chatWidget button:hover {
+    transform: scale(1.05);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    #chatWindow {
+        width: 300px !important;
+        right: -10px !important;
+    }
+}

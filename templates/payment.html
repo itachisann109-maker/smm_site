@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="text-center mb-4">
+            <h2 style="color: var(--text-primary); font-weight: 700;">Оплата</h2>
+            <p class="text-muted">Подтвердите оплату</p>
+        </div>
+
+        <div class="card p-4" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px;">
+            <div class="text-center mb-4">
+                <span class="text-muted">Сумма к оплате</span>
+                <h3 style="color: var(--text-primary); font-weight: 700;">
+                    {{ amount|default('0') }} ₽
+                </h3>
+                <p class="text-muted small">Маркет: SOCHYPER</p>
+                <p class="text-muted small">
+                    Способ: 
+                    {% if method == 'sbp' %}
+                        СБП
+                    {% elif method == 'card' %}
+                        Банковская карта
+                    {% else %}
+                        Не выбран
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="POST" action="{{ url_for('payment_page') }}">
+                <input type="hidden" name="amount" value="{{ amount|default('0') }}">
+                <input type="hidden" name="method" value="{{ method|default('sbp') }}">
+                
+                <button type="submit" 
+                        class="btn btn-success w-100" 
+                        style="font-weight: 600; padding: 12px; background: var(--btn-dark-bg); color: var(--btn-dark-text); border: none; border-radius: 10px;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Оплатить {{ amount|default('0') }} ₽
+                </button>
+            </form>
+
+            <p class="text-center text-muted mt-3 small">
+                В демо-режиме оплата проходит мгновенно
+            </p>
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="{{ url_for('deposit') }}" class="btn btn-outline-secondary" style="border-radius: 10px;">Вернуться назад</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

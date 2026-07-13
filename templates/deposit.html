@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="text-center mb-4">
+            <h2 style="color: var(--text-primary); font-weight: 700;">Пополнение баланса</h2>
+            <p class="text-muted">Выберите сумму и способ оплаты</p>
+        </div>
+
+        <div class="card p-4" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px;">
+            <div class="text-center mb-4">
+                <span class="text-muted">Текущий баланс</span>
+                <h3 style="color: var(--text-primary); font-weight: 700;">{{ user.balance }} ₽</h3>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold" style="color: var(--text-primary);">Сумма пополнения</label>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="500">500 ₽</button>
+                    <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="1000">1 000 ₽</button>
+                    <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="3000">3 000 ₽</button>
+                    <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="5000">5 000 ₽</button>
+                </div>
+                <input type="number" class="form-control" id="amountInput" min="1" step="1" placeholder="Введите свою сумму"
+                       style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary);">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold" style="color: var(--text-primary);">Способы оплаты</label>
+                <div class="payment-methods">
+                    <div class="payment-option">
+                        <input type="radio" name="payment_method" value="sbp" id="sbp" checked>
+                        <label for="sbp" class="payment-label">
+                            <i class="fas fa-qrcode me-2"></i>
+                            <span>СБП (любой банк РФ)</span>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" name="payment_method" value="card" id="card">
+                        <label for="card" class="payment-label">
+                            <i class="fas fa-credit-card me-2"></i>
+                            <span>Банковская карта</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-success w-100" id="depositBtn" style="font-weight: 600; padding: 12px;">
+                <i class="fas fa-check-circle me-2"></i>Пополнить
+            </button>
+
+            <p class="text-center text-muted mt-3 small">В демо-режиме баланс пополняется мгновенно</p>
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">На главную</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountBtns = document.querySelectorAll('.amount-btn');
+        const amountInput = document.getElementById('amountInput');
+
+        amountBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                amountBtns.forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                amountInput.value = this.dataset.amount;
+            });
+        });
+
+        amountInput.addEventListener('input', function() {
+            amountBtns.forEach(function(b) { b.classList.remove('active'); });
+        });
+
+        document.getElementById('depositBtn').addEventListener('click', function() {
+            const amount = amountInput.value;
+            if (!amount || parseFloat(amount) <= 0) {
+                alert('Пожалуйста, введите сумму пополнения');
+                return;
+            }
+
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (!selectedMethod) {
+                alert('Пожалуйста, выберите способ оплаты');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('deposit') }}";
+
+            const amountField = document.createElement('input');
+            amountField.type = 'hidden';
+            amountField.name = 'amount';
+            amountField.value = amount;
+            form.appendChild(amountField);
+
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = 'payment_method';
+            methodField.value = selectedMethod.value;
+            form.appendChild(methodField);
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+</script>
+{% endblock %}

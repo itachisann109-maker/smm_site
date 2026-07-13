@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px;">
+            <h2 class="text-center mb-4" style="color: var(--text-primary); font-weight: 700;">
+                <i class="fas fa-user-plus me-2" style="color: var(--link-color);"></i>Регистрация
+            </h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message|safe }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label" style="color: var(--text-secondary); font-weight: 500;">
+                        <i class="fas fa-user me-1"></i>Имя пользователя
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username" 
+                           placeholder="Придумайте логин" required
+                           style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary); border-radius: 10px; padding: 12px;">
+                    <div class="form-text text-muted">Только латиница, цифры и символы</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="email" class="form-label" style="color: var(--text-secondary); font-weight: 500;">
+                        <i class="fas fa-envelope me-1"></i>Email
+                    </label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           placeholder="example@mail.ru" required
+                           style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary); border-radius: 10px; padding: 12px;">
+                    <div class="form-text text-muted">Укажите ваш email</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label" style="color: var(--text-secondary); font-weight: 500;">
+                        <i class="fas fa-lock me-1"></i>Пароль
+                    </label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="Минимум 6 символов" required
+                           style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary); border-radius: 10px; padding: 12px;">
+                    <div class="form-text text-muted">Минимум 6 символов</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password_confirm" class="form-label" style="color: var(--text-secondary); font-weight: 500;">
+                        <i class="fas fa-check-circle me-1"></i>Подтвердите пароль
+                    </label>
+                    <input type="password" class="form-control" id="password_confirm" name="password_confirm" 
+                           placeholder="Повторите пароль" required
+                           style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary); border-radius: 10px; padding: 12px;">
+                    <div class="form-text text-muted" id="passwordMatch"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100" style="font-weight: 600; padding: 12px; border-radius: 10px;">
+                    <i class="fas fa-user-plus me-2"></i>Зарегистрироваться
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Или зарегистрируйтесь через</span>
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    <!-- Google -->
+                    <a href="{{ url_for('google_login') }}" 
+                       style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; border: 2px solid #e0e0e0; border-radius: 12px; text-decoration: none; color: #555; background: #ffffff; transition: all 0.3s ease; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.04);"
+                       onmouseover="this.style.borderColor='#4285f4'; this.style.boxShadow='0 4px 12px rgba(66,133,244,0.2)';"
+                       onmouseout="this.style.borderColor='#e0e0e0'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)';">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                        </svg>
+                        Google
+                    </a>
+                    
+                    <!-- Яндекс -->
+                    <a href="{{ url_for('yandex_login') }}" 
+                       style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; border: 2px solid #e0e0e0; border-radius: 12px; text-decoration: none; color: #555; background: #ffffff; transition: all 0.3s ease; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.04);"
+                       onmouseover="this.style.borderColor='#FC3F1D'; this.style.boxShadow='0 4px 12px rgba(252,63,29,0.2)';"
+                       onmouseout="this.style.borderColor='#e0e0e0'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)';">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path d="M24,2 C12.954,2 4,10.954 4,22 C4,33.046 12.954,42 24,42 C35.046,42 44,33.046 44,22 C44,10.954 35.046,2 24,2 Z" fill="#FC3F1D"/>
+                            <path d="M29.8,18.2 L25.6,28.4 L24,32.4 L22.4,28.4 L18.2,18.2 L21.4,18.2 L24,24.2 L26.6,18.2 L29.8,18.2 Z" fill="#FFFFFF"/>
+                        </svg>
+                        Яндекс
+                    </a>
+                </div>
+            </div>
+            
+            <p class="mt-3 text-center" style="color: var(--text-secondary);">
+                Уже есть аккаунт? <a href="{{ url_for('login') }}" style="color: var(--link-color); font-weight: 500;">Войдите</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const password = document.getElementById('password');
+        const passwordConfirm = document.getElementById('password_confirm');
+        const passwordMatch = document.getElementById('passwordMatch');
+
+        function checkPasswordMatch() {
+            if (password.value === '' && passwordConfirm.value === '') {
+                passwordMatch.textContent = '';
+                passwordMatch.style.color = '';
+                return;
+            }
+            if (password.value === passwordConfirm.value) {
+                passwordMatch.textContent = '✅ Пароли совпадают';
+                passwordMatch.style.color = 'var(--success-color, #198754)';
+            } else {
+                passwordMatch.textContent = '❌ Пароли не совпадают';
+                passwordMatch.style.color = 'var(--danger-color, #dc3545)';
+            }
+        }
+
+        password.addEventListener('input', checkPasswordMatch);
+        passwordConfirm.addEventListener('input', checkPasswordMatch);
+
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (password.value !== passwordConfirm.value) {
+                e.preventDefault();
+                alert('❌ Пароли не совпадают! Пожалуйста, исправьте.');
+                passwordConfirm.focus();
+                return false;
+            }
+            if (password.value.length < 6) {
+                e.preventDefault();
+                alert('❌ Пароль должен быть не менее 6 символов!');
+                password.focus();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- ===== БАННЕР ===== -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="hero-icon mb-3 animate-float">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h1 class="hero-title animate-fade-in-up">
+                    Продвижение во всех соцсетях за пару кликов
+                </h1>
+                <p class="hero-subtitle animate-fade-in-up delay-1">
+                    Моментально увеличивайте подписчиков, лайки, просмотры и любые другие показатели<br>
+                    во всех социальных сетях. У нас самые низкие цены на рынке!
+                </p>
+                <div class="d-flex justify-content-center mt-3 animate-fade-in-up delay-2">
+                    <a href="{{ url_for('services') }}" class="hero-btn btn-ripple">
+                        <i class="fas fa-rocket me-2"></i>Начать продвижение
+                    </a>
+                </div>
+                <div class="hero-rating mt-5 animate-fade-in-up delay-3">
+                    <span class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </span>
+                    <span class="ms-2 fw-bold">4.7 / 5</span>
+                    <span class="text-muted ms-2">По данным 1744 отзывов</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== ПРЕИМУЩЕСТВА ===== -->
+<section class="container py-4">
+    <div class="row text-center">
+        <div class="col-md-4 mb-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-icon animate-float">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h5 class="fw-semibold">Мгновенно</h5>
+            <p class="text-muted">Запуск сразу после оплаты</p>
+        </div>
+        <div class="col-md-4 mb-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-icon animate-float" style="animation-delay: 0.5s;">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h5 class="fw-semibold">Безопасно</h5>
+            <p class="text-muted">Гарантия качества и конфиденциальность</p>
+        </div>
+        <div class="col-md-4 mb-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-icon animate-float" style="animation-delay: 1s;">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <h5 class="fw-semibold">Дёшево</h5>
+            <p class="text-muted">Лучшие цены на рынке</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===== ОТЗЫВЫ ===== -->
+<section id="reviews" class="py-5" style="background: var(--bg-light);">
+    <div class="container">
+        <h2 class="text-center mb-4" data-aos="fade-up" style="font-weight: 600; color: var(--text-primary);">
+            Что говорят наши клиенты
+        </h2>
+        <div class="row" id="reviews-container">
+            <!-- Контент генерируется JavaScript -->
+        </div>
+    </div>
+</section>
+
+<!-- ===== ПОМОЩЬ ===== -->
+<section id="help" class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5" data-aos="fade-up" style="font-weight: 700; font-size: 2.2rem; color: var(--text-primary); letter-spacing: -0.5px;">
+            Как запустить продвижение в SOCHYPER
+        </h2>
+        <div class="help-grid">
+            <!-- Пункт 1 -->
+            <div class="help-card clickable" data-aos="flip-left" data-aos-delay="100" data-href="{{ url_for('services') }}">
+                <div class="help-icon-wrapper">
+                    <div class="help-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="help-step">01</div>
+                </div>
+                <div class="help-content">
+                    <h5 class="help-title">Оформите заказ</h5>
+                    <p class="help-desc">Выберите соцсеть, тип услуги и тариф. Укажите ссылку.</p>
+                </div>
+                <div class="help-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+
+            <!-- Пункт 2 -->
+            <div class="help-card clickable" data-aos="flip-left" data-aos-delay="200" data-href="{{ url_for('deposit') }}">
+                <div class="help-icon-wrapper">
+                    <div class="help-icon"><i class="fas fa-credit-card"></i></div>
+                    <div class="help-step">02</div>
+                </div>
+                <div class="help-content">
+                    <h5 class="help-title">Оплатите продвижение</h5>
+                    <p class="help-desc">Если есть промокод, укажите его. Оплатите удобным способом.</p>
+                </div>
+                <div class="help-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+
+            <!-- Пункт 3 -->
+            <div class="help-card" data-aos="flip-left" data-aos-delay="300">
+                <div class="help-icon-wrapper">
+                    <div class="help-icon"><i class="fas fa-clock"></i></div>
+                    <div class="help-step">03</div>
+                </div>
+                <div class="help-content">
+                    <h5 class="help-title">Ожидайте</h5>
+                    <p class="help-desc">Запуск автоматический. Рост активности в течение 24 часов.</p>
+                </div>
+            </div>
+
+            <!-- Пункт 4 -->
+            <div class="help-card clickable" data-aos="flip-left" data-aos-delay="400" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                <div class="help-icon-wrapper">
+                    <div class="help-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="help-step">04</div>
+                </div>
+                <div class="help-content">
+                    <h5 class="help-title">Оцените результат</h5>
+                    <p class="help-desc">Показатели не обнуляются. Гарантия качества.</p>
+                </div>
+                <div class="help-arrow"><i class="fas fa-arrow-right"></i></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ОТЗЫВА ===== -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-modal); border: 1px solid var(--border-light); border-radius: 20px;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-light);">
+                <h5 class="modal-title fw-bold" id="reviewModalLabel" style="color: var(--text-primary);">
+                    <i class="fas fa-star me-2" style="color: var(--icon-color);"></i>Оцените результат
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть" style="filter: var(--close-filter);"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Поделитесь своими впечатлениями о продвижении</p>
+                <div class="mb-3 text-center">
+                    <label class="form-label fw-semibold" style="color: var(--text-primary);">Ваша оценка</label>
+                    <div class="review-stars-input">
+                        <i class="fas fa-star" data-value="1" style="font-size: 2rem; cursor: pointer; color: var(--rating-star-empty);"></i>
+                        <i class="fas fa-star" data-value="2" style="font-size: 2rem; cursor: pointer; color: var(--rating-star-empty);"></i>
+                        <i class="fas fa-star" data-value="3" style="font-size: 2rem; cursor: pointer; color: var(--rating-star-empty);"></i>
+                        <i class="fas fa-star" data-value="4" style="font-size: 2rem; cursor: pointer; color: var(--rating-star-empty);"></i>
+                        <i class="fas fa-star" data-value="5" style="font-size: 2rem; cursor: pointer; color: var(--rating-star-empty);"></i>
+                    </div>
+                    <input type="hidden" id="reviewRating" value="0">
+                    <span class="text-muted small" id="ratingText">Выберите оценку</span>
+                </div>
+                <div class="mb-3">
+                    <label for="reviewText" class="form-label fw-semibold" style="color: var(--text-primary);">Ваш отзыв</label>
+                    <textarea class="form-control" id="reviewText" rows="3" placeholder="Напишите, что вам понравилось или что можно улучшить..." style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary); resize: none;"></textarea>
+                </div>
+                <div class="alert alert-info" role="alert" style="background: var(--bg-code); border-color: var(--border-light); color: var(--text-secondary);">
+                    <i class="fas fa-info-circle me-2"></i>Ваш отзыв не будет опубликован. Это демонстрационная форма.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-light);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: var(--bg-code); color: var(--text-secondary); border: 1px solid var(--border-light);">Закрыть</button>
+                <button type="button" class="btn btn-success" id="submitReview" style="background: var(--btn-dark-bg); color: var(--btn-dark-text); border: 1px solid var(--btn-dark-bg); font-weight: 600; padding: 10px 30px;">
+                    <i class="fas fa-check-circle me-2"></i>Отправить отзыв
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== СКРИПТЫ ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ===== КЛИКАБЕЛЬНЫЕ КАРТОЧКИ =====
+    var clickableCards = document.querySelectorAll('.help-card.clickable[data-href]');
+    for (var i = 0; i < clickableCards.length; i++) {
+        (function(card) {
+            card.addEventListener('click', function() {
+                var href = this.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        })(clickableCards[i]);
+    }
+
+    // ===== ЗВЁЗДЫ ДЛЯ ОТЗЫВА =====
+    var stars = document.querySelectorAll('.review-stars-input i');
+    var ratingInput = document.getElementById('reviewRating');
+    var ratingText = document.getElementById('ratingText');
+
+    for (var s = 0; s < stars.length; s++) {
+        (function(star) {
+            star.addEventListener('click', function() {
+                var value = parseInt(this.getAttribute('data-value'));
+                ratingInput.value = value;
+                for (var k = 0; k < stars.length; k++) {
+                    if (parseInt(stars[k].getAttribute('data-value')) <= value) {
+                        stars[k].style.color = 'var(--rating-star)';
+                    } else {
+                        stars[k].style.color = 'var(--rating-star-empty)';
+                    }
+                }
+                var labels = ['', 'Ужасно', 'Плохо', 'Нормально', 'Хорошо', 'Отлично!'];
+                ratingText.textContent = labels[value] || 'Выберите оценку';
+            });
+        })(stars[s]);
+    }
+
+    // ===== ОТПРАВКА ОТЗЫВА =====
+    var submitBtn = document.getElementById('submitReview');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function() {
+            var rating = ratingInput.value;
+            var text = document.getElementById('reviewText').value.trim();
+            if (rating == 0) {
+                showToast('Пожалуйста, поставьте оценку', 'error');
+                return;
+            }
+            if (!text) {
+                showToast('Пожалуйста, напишите текст отзыва', 'error');
+                return;
+            }
+            showToast('✅ Спасибо за ваш отзыв! Оценка: ' + rating + ' звезд', 'success');
+            var modalElement = document.getElementById('reviewModal');
+            var modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+            document.getElementById('reviewRating').value = 0;
+            document.getElementById('reviewText').value = '';
+            document.getElementById('ratingText').textContent = 'Выберите оценку';
+            for (var k = 0; k < stars.length; k++) {
+                stars[k].style.color = 'var(--rating-star-empty)';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

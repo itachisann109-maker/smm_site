@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0" style="color: var(--text-primary); font-weight: 700;">
+            <i class="fas fa-cog me-2" style="color: var(--link-color);"></i>Панель администратора
+        </h2>
+        <a href="{{ url_for('export_orders_csv') }}" class="btn btn-success">
+            <i class="fas fa-file-excel me-1"></i>Экспорт CSV
+        </a>
+    </div>
+    
+    <ul class="nav nav-tabs mt-3" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button">
+                <i class="fas fa-list me-1"></i>Заказы
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">
+                <i class="fas fa-users me-1"></i>Пользователи
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content mt-3" id="adminTabsContent">
+        <!-- ===== ВКЛАДКА "ЗАКАЗЫ" ===== -->
+        <div class="tab-pane fade show active" id="orders" role="tabpanel">
+            <!-- Фильтры -->
+            <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+                <span class="fw-semibold">Фильтр:</span>
+                <button class="btn btn-sm filter-btn active" data-status="all">Все</button>
+                <button class="btn btn-sm filter-btn" data-status="pending">⏳ Ожидает</button>
+                <button class="btn btn-sm filter-btn" data-status="processing">🔄 В обработке</button>
+                <button class="btn btn-sm filter-btn" data-status="done">✅ Выполнен</button>
+                <button class="btn btn-sm filter-btn" data-status="cancelled">❌ Отменён</button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Пользователь</th>
+                            <th>Услуга</th>
+                            <th>Кол-во</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                            <th>Внешний ID</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr data-status="{{ order.status }}">
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.user.username }}</td>
+                            <td>{{ order.service.name }}</td>
+                            <td>{{ order.quantity }}</td>
+                            <td>{{ order.total_price }} ₽</td>
+                            <td>
+                                <span class="badge 
+                                    {% if order.status == 'pending' %}bg-warning text-dark
+                                    {% elif order.status == 'processing' %}bg-info text-dark
+                                    {% elif order.status == 'done' %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <code>{{ order.external_order_id or '—' }}</code>
+                            </td>
+                            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if orders|length == 0 %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox" style="font-size: 3rem; display: block; margin-bottom: 12px;"></i>
+                <p>Заказов пока нет</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- ===== ВКЛАДКА "ПОЛЬЗОВАТЕЛИ" ===== -->
+        <div class="tab-pane fade" id="users" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя</th>
+                            <th>Баланс</th>
+                            <th>Админ?</th>
+                            <th>Заказов</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>#{{ u.id }}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.balance }} ₽</td>
+                            <td>
+                                <span class="badge {% if u.is_admin %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ 'Да' if u.is_admin else 'Нет' }}
+                                </span>
+                            </td>
+                            <td>{{ u.orders|length }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .filter-btn {
+        background: var(--bg-code);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: 20px;
+        padding: 4px 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-btn:hover {
+        background: var(--bg-hover);
+    }
+    .filter-btn.active {
+        background: var(--link-color);
+        color: #fff;
+        border-color: var(--link-color);
+    }
+    .table thead tr {
+        background: var(--bg-code);
+    }
+    .table thead th {
+        padding: 10px 12px;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    .table tbody tr {
+        background: var(--bg-card);
+    }
+    .table tbody td {
+        padding: 12px;
+        color: var(--text-primary);
+    }
+    .table code {
+        background: var(--bg-code);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    .nav-tabs .nav-link {
+        color: var(--text-secondary);
+        border: none;
+        font-weight: 600;
+    }
+    .nav-tabs .nav-link.active {
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--link-color);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var filterBtns = document.querySelectorAll('.filter-btn');
+        var rows = document.querySelectorAll('#ordersTable tbody tr');
+        
+        filterBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                filterBtns.forEach(function(b) {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                var status = this.getAttribute('data-status');
+                
+                rows.forEach(function(row) {
+                    if (status === 'all' || row.getAttribute('data-status') === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

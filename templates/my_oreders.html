@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4" style="color: var(--text-primary); font-weight: 700;">
+        <i class="fas fa-history me-2" style="color: var(--link-color);"></i>Мои заказы
+    </h2>
+    
+    {% if orders|length == 0 %}
+    <div class="text-center py-5" style="color: var(--text-muted);">
+        <i class="fas fa-inbox" style="font-size: 3rem; display: block; margin-bottom: 12px;"></i>
+        <p>У вас пока нет заказов</p>
+        <a href="{{ url_for('services') }}" class="btn btn-primary">Перейти к услугам</a>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr style="background: var(--bg-code);">
+                    <th style="padding: 10px 12px;">ID</th>
+                    <th style="padding: 10px 12px;">Услуга</th>
+                    <th style="padding: 10px 12px;">Кол-во</th>
+                    <th style="padding: 10px 12px;">Сумма</th>
+                    <th style="padding: 10px 12px;">Статус</th>
+                    <th style="padding: 10px 12px;">Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr style="background: var(--bg-card);">
+                    <td style="padding: 12px;">#{{ order.id }}</td>
+                    <td style="padding: 12px;">{{ order.service.name }}</td>
+                    <td style="padding: 12px;">{{ order.quantity }}</td>
+                    <td style="padding: 12px;">{{ order.total_price }} ₽</td>
+                    <td style="padding: 12px;">
+                        <span class="badge 
+                            {% if order.status == 'pending' %}bg-warning text-dark
+                            {% elif order.status == 'processing' %}bg-info text-dark
+                            {% elif order.status == 'done' %}bg-success
+                            {% else %}bg-danger{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </td>
+                    <td style="padding: 12px;">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
