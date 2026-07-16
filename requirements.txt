@@ -4,3 +4,10 @@ werkzeug
 requests
 authlib
 gunicorn
+flask
+flask-sqlalchemy
+werkzeug
+requests
+authlib
+python-dotenv
+gunicorn

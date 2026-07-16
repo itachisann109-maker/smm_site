@@ -11,10 +11,7 @@ import re
 import requests
 from io import StringIO
 from authlib.integrations.flask_client import OAuth
-from dotenv import load_dotenv
-load_dotenv()
-print("GOOGLE_CLIENT_ID:", os.environ.get('GOOGLE_CLIENT_ID'))
-print("YANDEX_CLIENT_ID:", os.environ.get('YANDEX_CLIENT_ID'))
+
 
 # ========================================================
 # НАСТРОЙКИ
