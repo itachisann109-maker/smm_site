@@ -11,6 +11,10 @@ import re
 import requests
 from io import StringIO
 from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
+load_dotenv()
+print("GOOGLE_CLIENT_ID:", os.environ.get('GOOGLE_CLIENT_ID'))
+print("YANDEX_CLIENT_ID:", os.environ.get('YANDEX_CLIENT_ID'))
 
 # ========================================================
 # НАСТРОЙКИ
@@ -101,7 +105,7 @@ class Order(db.Model):
 
 oauth = OAuth(app)
 
-# Яндекс
+# Яндекс - упрощённая версия
 if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
     yandex = oauth.register(
         name='yandex',
@@ -114,7 +118,7 @@ if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
         client_kwargs={'scope': 'login:info login:email'}
     )
 
-# Google
+# Google - упрощённая версия
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     google = oauth.register(
         name='google',
@@ -124,9 +128,8 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         authorize_url='https://accounts.google.com/o/oauth2/auth',
         api_base_url='https://www.googleapis.com/oauth2/v2/',
         userinfo_endpoint='https://www.googleapis.com/oauth2/v2/userinfo',
-        client_kwargs={'scope': 'openid email profile'}
+        client_kwargs={'scope': 'email profile'}
     )
-
 # ========================================================
 # СОЗДАНИЕ ТАБЛИЦ
 # ========================================================
@@ -332,7 +335,7 @@ def logout():
 
 
 # ========================================================
-# OAuth МАРШРУТЫ (исправлены)
+# OAuth МАРШРУТЫ
 # ========================================================
 
 @app.route('/yandex/login')
@@ -341,7 +344,7 @@ def yandex_login():
     if 'yandex' not in globals():
         flash('❌ Яндекс OAuth не настроен', 'danger')
         return redirect(url_for('login'))
-    redirect_uri = url_for('yandex_callback', _external=True)
+    redirect_uri = f"{BASE_URL}/yandex/callback"
     return yandex.authorize_redirect(redirect_uri)
 
 
@@ -349,14 +352,18 @@ def yandex_login():
 def yandex_callback():
     """Callback после входа через Яндекс"""
     try:
+        # Получаем токен
         token = yandex.authorize_access_token()
-        user_info = yandex.parse_id_token(token)
+        
+        # Получаем информацию о пользователе через API
+        resp = yandex.get('info?format=json')
+        user_info = resp.json()
         
         user = get_or_create_user_by_oauth(
             provider='yandex',
             provider_id=user_info.get('id'),
             name=user_info.get('login'),
-            email=user_info.get('email'),
+            email=user_info.get('default_email'),
             avatar=None
         )
         
@@ -375,7 +382,7 @@ def google_login():
     if 'google' not in globals():
         flash('❌ Google OAuth не настроен', 'danger')
         return redirect(url_for('login'))
-    redirect_uri = url_for('google_callback', _external=True)
+    redirect_uri = f"{BASE_URL}/google/callback"
     return google.authorize_redirect(redirect_uri)
 
 
@@ -383,12 +390,16 @@ def google_login():
 def google_callback():
     """Callback после входа через Google"""
     try:
+        # Получаем токен
         token = google.authorize_access_token()
-        user_info = google.parse_id_token(token)
+        
+        # Получаем информацию о пользователе через API
+        resp = google.get('userinfo')
+        user_info = resp.json()
         
         user = get_or_create_user_by_oauth(
             provider='google',
-            provider_id=user_info.get('sub'),
+            provider_id=user_info.get('id', user_info.get('sub')),
             name=user_info.get('name'),
             email=user_info.get('email'),
             avatar=user_info.get('picture')

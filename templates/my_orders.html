@@ -17,22 +17,22 @@
         <table class="table">
             <thead>
                 <tr style="background: var(--bg-code);">
-                    <th style="padding: 10px 12px;">ID</th>
-                    <th style="padding: 10px 12px;">Услуга</th>
-                    <th style="padding: 10px 12px;">Кол-во</th>
-                    <th style="padding: 10px 12px;">Сумма</th>
-                    <th style="padding: 10px 12px;">Статус</th>
-                    <th style="padding: 10px 12px;">Дата</th>
+                    <th>ID</th>
+                    <th>Услуга</th>
+                    <th>Кол-во</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
                 </tr>
             </thead>
             <tbody>
                 {% for order in orders %}
                 <tr style="background: var(--bg-card);">
-                    <td style="padding: 12px;">#{{ order.id }}</td>
-                    <td style="padding: 12px;">{{ order.service.name }}</td>
-                    <td style="padding: 12px;">{{ order.quantity }}</td>
-                    <td style="padding: 12px;">{{ order.total_price }} ₽</td>
-                    <td style="padding: 12px;">
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.service.name }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.total_price }} ₽</td>
+                    <td>
                         <span class="badge 
                             {% if order.status == 'pending' %}bg-warning text-dark
                             {% elif order.status == 'processing' %}bg-info text-dark
@@ -41,7 +41,7 @@
                             {{ order.status }}
                         </span>
                     </td>
-                    <td style="padding: 12px;">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
