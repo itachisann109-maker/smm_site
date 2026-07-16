@@ -337,11 +337,11 @@ def logout():
 
 @app.route('/yandex/login')
 def yandex_login():
-    """Вход через Яндекс"""
     if 'yandex' not in globals():
         flash('❌ Яндекс OAuth не настроен', 'danger')
         return redirect(url_for('login'))
     redirect_uri = f"{BASE_URL}/yandex/callback"
+    print(f"🔍 Яндекс Redirect URI: {redirect_uri}")  # ← ДОБАВЬТЕ
     return yandex.authorize_redirect(redirect_uri)
 
 
@@ -375,11 +375,11 @@ def yandex_callback():
 
 @app.route('/google/login')
 def google_login():
-    """Вход через Google"""
     if 'google' not in globals():
         flash('❌ Google OAuth не настроен', 'danger')
         return redirect(url_for('login'))
     redirect_uri = f"{BASE_URL}/google/callback"
+    print(f"🔍 Google Redirect URI: {redirect_uri}")  # ← ДОБАВЬТЕ
     return google.authorize_redirect(redirect_uri)
 
 
