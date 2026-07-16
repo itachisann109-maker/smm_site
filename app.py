@@ -111,8 +111,7 @@ if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
         authorize_url='https://oauth.yandex.ru/authorize',
         api_base_url='https://login.yandex.ru/info',
         userinfo_endpoint='https://login.yandex.ru/info?format=json',
-        client_kwargs={'scope': 'login:info login:email'},
-        server_metadata_url='https://oauth.yandex.ru/.well-known/openid-configuration'
+        client_kwargs={'scope': 'login:info login:email'}
     )
 
 # Google
@@ -125,10 +124,8 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         authorize_url='https://accounts.google.com/o/oauth2/auth',
         api_base_url='https://www.googleapis.com/oauth2/v2/',
         userinfo_endpoint='https://www.googleapis.com/oauth2/v2/userinfo',
-        client_kwargs={'scope': 'openid email profile'},
-        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
+        client_kwargs={'scope': 'openid email profile'}
     )
-
 
 # ========================================================
 # СОЗДАНИЕ ТАБЛИЦ
