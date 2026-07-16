@@ -160,12 +160,20 @@
             }
         }
 
-        const firstCategory = document.querySelector('.category-body');
-        if (firstCategory) {
-            firstCategory.classList.add('active');
-            const arrow = firstCategory.closest('.category-item').querySelector('.category-arrow i');
-            if (arrow) arrow.className = 'fas fa-chevron-up';
-        }
+        // ===== ВСЕ БЛОКИ ЗАКРЫТЫ =====
+        // Убираем активный класс у всех категорий и услуг
+        document.querySelectorAll('.category-body').forEach(body => {
+            body.classList.remove('active');
+        });
+        document.querySelectorAll('.service-body').forEach(body => {
+            body.classList.remove('active');
+        });
+        document.querySelectorAll('.category-arrow i').forEach(arrow => {
+            arrow.className = 'fas fa-chevron-down';
+        });
+        document.querySelectorAll('.service-arrow i').forEach(arrow => {
+            arrow.className = 'fas fa-chevron-down';
+        });
     });
 </script>
 {% endblock %}

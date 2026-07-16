@@ -19,6 +19,10 @@ from authlib.integrations.flask_client import OAuth
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
+# ===== БАЗОВЫЙ URL ДЛЯ OAuth =====
+# Для локального тестирования
+BASE_URL = os.environ.get('BASE_URL', 'http://127.0.0.1:5000')
+
 # ===== OAuth НАСТРОЙКИ (из переменных окружения) =====
 
 # Яндекс OAuth
@@ -97,7 +101,7 @@ class Order(db.Model):
 
 oauth = OAuth(app)
 
-# Яндекс (только если заданы переменные)
+# Яндекс
 if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
     yandex = oauth.register(
         name='yandex',
@@ -110,10 +114,8 @@ if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
         client_kwargs={'scope': 'login:info login:email'},
         server_metadata_url='https://oauth.yandex.ru/.well-known/openid-configuration'
     )
-else:
-    print("⚠️ Яндекс OAuth не настроен (проверьте переменные окружения)")
 
-# Google (только если заданы переменные)
+# Google
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     google = oauth.register(
         name='google',
@@ -126,8 +128,6 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         client_kwargs={'scope': 'openid email profile'},
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
     )
-else:
-    print("⚠️ Google OAuth не настроен (проверьте переменные окружения)")
 
 
 # ========================================================
@@ -335,11 +335,12 @@ def logout():
 
 
 # ========================================================
-# OAuth МАРШРУТЫ
+# OAuth МАРШРУТЫ (исправлены)
 # ========================================================
 
 @app.route('/yandex/login')
 def yandex_login():
+    """Вход через Яндекс"""
     if 'yandex' not in globals():
         flash('❌ Яндекс OAuth не настроен', 'danger')
         return redirect(url_for('login'))
@@ -349,6 +350,7 @@ def yandex_login():
 
 @app.route('/yandex/callback')
 def yandex_callback():
+    """Callback после входа через Яндекс"""
     try:
         token = yandex.authorize_access_token()
         user_info = yandex.parse_id_token(token)
@@ -372,6 +374,7 @@ def yandex_callback():
 
 @app.route('/google/login')
 def google_login():
+    """Вход через Google"""
     if 'google' not in globals():
         flash('❌ Google OAuth не настроен', 'danger')
         return redirect(url_for('login'))
@@ -381,6 +384,7 @@ def google_login():
 
 @app.route('/google/callback')
 def google_callback():
+    """Callback после входа через Google"""
     try:
         token = google.authorize_access_token()
         user_info = google.parse_id_token(token)
@@ -412,6 +416,20 @@ def services():
     all_services = Service.query.all()
     grouped_services = get_grouped_services()
     return render_template('services.html', user=user, services=all_services, grouped_services=grouped_services)
+
+
+@app.route('/my_orders')
+def my_orders():
+    user = get_current_user()
+    grouped_services = get_grouped_services()
+    
+    if not user:
+        flash('Пожалуйста, войдите в систему', 'warning')
+        return redirect(url_for('login'))
+    
+    orders = Order.query.filter_by(user_id=user.id).order_by(Order.created_at.desc()).all()
+    
+    return render_template('my_orders.html', user=user, orders=orders, grouped_services=grouped_services)
 
 
 @app.route('/order/<int:service_id>', methods=['GET', 'POST'])
@@ -466,20 +484,6 @@ def order(service_id):
     return render_template('order.html', user=user, service=service, grouped_services=grouped_services)
 
 
-@app.route('/my_orders')
-def my_orders():
-    user = get_current_user()
-    grouped_services = get_grouped_services()
-    
-    if not user:
-        flash('Пожалуйста, войдите в систему', 'warning')
-        return redirect(url_for('login'))
-    
-    orders = Order.query.filter_by(user_id=user.id).order_by(Order.created_at.desc()).all()
-    
-    return render_template('my_orders.html', user=user, orders=orders, grouped_services=grouped_services)
-
-
 @app.route('/admin')
 def admin():
     user = get_current_user()
@@ -530,66 +534,6 @@ def export_orders_csv():
         mimetype='text/csv',
         headers={'Content-Disposition': 'attachment; filename=orders_export.csv'}
     )
-
-
-@app.route('/admin/balance')
-def admin_balance():
-    user = get_current_user()
-    if not user or not user.is_admin:
-        flash('Доступ запрещен', 'danger')
-        return redirect(url_for('index'))
-    
-    balance = get_balance()
-    
-    if balance.get('error'):
-        return f'<h2>❌ Ошибка получения баланса</h2><pre>{balance}</pre>'
-    
-    return f'''
-    <h2>💰 Баланс ConfirmSMM</h2>
-    <p><strong>Баланс:</strong> {balance.get("balance", "0")} {balance.get("currency", "USD")}</p>
-    <p><a href="/admin">← Назад в админку</a></p>
-    '''
-
-
-@app.route('/admin/fetch_services')
-def fetch_services():
-    user = get_current_user()
-    if not user or not user.is_admin:
-        flash('Доступ запрещен', 'danger')
-        return redirect(url_for('index'))
-    
-    services = get_services()
-    
-    if isinstance(services, list):
-        html = '''
-        <h2>📋 Услуги ConfirmSMM</h2>
-        <p><a href="/admin">← Назад в админку</a></p>
-        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-            <tr style="background: #f0f0f0;">
-                <th>ID</th>
-                <th>Название</th>
-                <th>Категория</th>
-                <th>Цена (за 1000)</th>
-                <th>Мин</th>
-                <th>Макс</th>
-            </tr>
-        '''
-        for s in services[:50]:
-            html += f'''
-            <tr>
-                <td><strong>{s.get('service')}</strong></td>
-                <td>{s.get('name', '—')}</td>
-                <td>{s.get('category', '—')}</td>
-                <td>{s.get('rate', '—')} USD</td>
-                <td>{s.get('min', '—')}</td>
-                <td>{s.get('max', '—')}</td>
-            </tr>
-            '''
-        html += '</table>'
-        html += f'<p><strong>Всего услуг:</strong> {len(services)}</p>'
-        return html
-    else:
-        return f'<h2>❌ Ошибка получения услуг</h2><pre>{services}</pre>'
 
 
 @app.route('/deposit', methods=['GET', 'POST'])

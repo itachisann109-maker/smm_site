@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- ===== БАННЕР ===== -->
-<section class="hero-section">
+<!-- БАННЕР -->
+<section class="hero-section" data-aos="fade-down">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8 text-center">
@@ -37,7 +37,7 @@
     </div>
 </section>
 
-<!-- ===== ПРЕИМУЩЕСТВА ===== -->
+<!-- БЛОК ПРЕИМУЩЕСТВ -->
 <section class="container py-4">
     <div class="row text-center">
         <div class="col-md-4 mb-3" data-aos="fade-up" data-aos-delay="100">
@@ -64,26 +64,25 @@
     </div>
 </section>
 
-<!-- ===== ОТЗЫВЫ ===== -->
+<!-- ОТЗЫВЫ -->
 <section id="reviews" class="py-5" style="background: var(--bg-light);">
     <div class="container">
         <h2 class="text-center mb-4" data-aos="fade-up" style="font-weight: 600; color: var(--text-primary);">
             Что говорят наши клиенты
         </h2>
         <div class="row" id="reviews-container">
-            <!-- Контент генерируется JavaScript -->
+            <!-- Отзывы загружаются через JavaScript -->
         </div>
     </div>
 </section>
 
-<!-- ===== ПОМОЩЬ ===== -->
+<!-- ПОМОЩЬ -->
 <section id="help" class="py-5">
     <div class="container">
         <h2 class="text-center mb-5" data-aos="fade-up" style="font-weight: 700; font-size: 2.2rem; color: var(--text-primary); letter-spacing: -0.5px;">
             Как запустить продвижение в SOCHYPER
         </h2>
         <div class="help-grid">
-            <!-- Пункт 1 -->
             <div class="help-card clickable" data-aos="flip-left" data-aos-delay="100" data-href="{{ url_for('services') }}">
                 <div class="help-icon-wrapper">
                     <div class="help-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -96,7 +95,6 @@
                 <div class="help-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
 
-            <!-- Пункт 2 -->
             <div class="help-card clickable" data-aos="flip-left" data-aos-delay="200" data-href="{{ url_for('deposit') }}">
                 <div class="help-icon-wrapper">
                     <div class="help-icon"><i class="fas fa-credit-card"></i></div>
@@ -109,7 +107,6 @@
                 <div class="help-arrow"><i class="fas fa-arrow-right"></i></div>
             </div>
 
-            <!-- Пункт 3 -->
             <div class="help-card" data-aos="flip-left" data-aos-delay="300">
                 <div class="help-icon-wrapper">
                     <div class="help-icon"><i class="fas fa-clock"></i></div>
@@ -121,7 +118,6 @@
                 </div>
             </div>
 
-            <!-- Пункт 4 -->
             <div class="help-card clickable" data-aos="flip-left" data-aos-delay="400" data-bs-toggle="modal" data-bs-target="#reviewModal">
                 <div class="help-icon-wrapper">
                     <div class="help-icon"><i class="fas fa-chart-line"></i></div>
@@ -137,7 +133,7 @@
     </div>
 </section>
 
-<!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ОТЗЫВА ===== -->
+<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ОТЗЫВА -->
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background: var(--bg-modal); border: 1px solid var(--border-light); border-radius: 20px;">
@@ -165,9 +161,6 @@
                     <label for="reviewText" class="form-label fw-semibold" style="color: var(--text-primary);">Ваш отзыв</label>
                     <textarea class="form-control" id="reviewText" rows="3" placeholder="Напишите, что вам понравилось или что можно улучшить..." style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary); resize: none;"></textarea>
                 </div>
-                <div class="alert alert-info" role="alert" style="background: var(--bg-code); border-color: var(--border-light); color: var(--text-secondary);">
-                    <i class="fas fa-info-circle me-2"></i>Ваш отзыв не будет опубликован. Это демонстрационная форма.
-                </div>
             </div>
             <div class="modal-footer" style="border-top: 1px solid var(--border-light);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: var(--bg-code); color: var(--text-secondary); border: 1px solid var(--border-light);">Закрыть</button>
@@ -179,9 +172,86 @@
     </div>
 </div>
 
-<!-- ===== СКРИПТЫ ===== -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== ОТЗЫВЫ =====
+    const reviewsContainer = document.getElementById('reviews-container');
+    
+    const reviews = [
+        {
+            name: "Алексей",
+            text: "Очень быстро накрутили подписчиков в Telegram. Всё работает, качество отличное!",
+            rating: 5,
+            color: "#0d6efd"
+        },
+        {
+            name: "Мария",
+            text: "Пользуюсь сервисом уже месяц. Подписчики не отписываются, качество радует!",
+            rating: 5,
+            color: "#e74c3c"
+        },
+        {
+            name: "Дмитрий",
+            text: "Цены ниже чем у конкурентов, а качество выше. Рекомендую!",
+            rating: 5,
+            color: "#2ecc71"
+        },
+        {
+            name: "Екатерина",
+            text: "Сделали заказ на 5000 подписчиков в Instagram — выполнили за 3 часа!",
+            rating: 5,
+            color: "#e91e63"
+        },
+        {
+            name: "Иван",
+            text: "Отличный сервис, буду заказывать ещё! Всё чётко и без проблем.",
+            rating: 5,
+            color: "#9b59b6"
+        },
+        {
+            name: "Анна",
+            text: "Накрутил лайки в TikTok — залетел в рекомендации! Спасибо!",
+            rating: 5,
+            color: "#00bcd4"
+        }
+    ];
+
+    // Перемешиваем отзывы
+    const shuffled = reviews.sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 3);
+
+    function getStars(rating) {
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                html += '<i class="fas fa-star"></i>';
+            } else {
+                html += '<i class="fas fa-star" style="color: var(--rating-star-empty);"></i>';
+            }
+        }
+        return html;
+    }
+
+    let html = '';
+    selected.forEach(function(review) {
+        html += `
+        <div class="col-md-4 mb-3" data-aos="fade-up">
+            <div class="card h-100" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px;">
+                <div class="d-flex align-items-center mb-2">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: ${review.color}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; margin-right: 12px;">${review.name.charAt(0)}</div>
+                    <div>
+                        <h6 class="mb-0" style="color: var(--text-primary); font-weight: 600;">${review.name}</h6>
+                        <span style="color: var(--rating-star); font-size: 0.9rem;">${getStars(review.rating)}</span>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0;">"${review.text}"</p>
+            </div>
+        </div>
+        `;
+    });
+    
+    reviewsContainer.innerHTML = html;
+
     // ===== КЛИКАБЕЛЬНЫЕ КАРТОЧКИ =====
     var clickableCards = document.querySelectorAll('.help-card.clickable[data-href]');
     for (var i = 0; i < clickableCards.length; i++) {
@@ -225,14 +295,14 @@ document.addEventListener('DOMContentLoaded', function() {
             var rating = ratingInput.value;
             var text = document.getElementById('reviewText').value.trim();
             if (rating == 0) {
-                showToast('Пожалуйста, поставьте оценку', 'error');
+                alert('Пожалуйста, поставьте оценку');
                 return;
             }
             if (!text) {
-                showToast('Пожалуйста, напишите текст отзыва', 'error');
+                alert('Пожалуйста, напишите текст отзыва');
                 return;
             }
-            showToast('✅ Спасибо за ваш отзыв! Оценка: ' + rating + ' звезд', 'success');
+            alert('✅ Спасибо за ваш отзыв! Оценка: ' + rating + ' звезд');
             var modalElement = document.getElementById('reviewModal');
             var modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) modal.hide();
