@@ -352,8 +352,9 @@ def yandex_login():
 
 @app.route('/yandex/callback')
 def yandex_callback():
-    """Callback после входа через Яндекс"""
+    print("🔍 Яндекс: начат callback")  # ← ЭТА СТРОЧКА ДОЛЖНА БЫТЬ
     try:
+        # ...
         print("🔍 Яндекс: начат callback")  # ← ДОБАВЬТЕ
         
         token = yandex.authorize_access_token()
@@ -381,6 +382,7 @@ def yandex_callback():
         print(f"❌ Яндекс: ошибка: {e}")  # ← ДОБАВЬТЕ
         flash(f'❌ Ошибка входа через Яндекс: {e}', 'danger')
         return redirect(url_for('login'))
+        
 
 
 @app.route('/google/login')
