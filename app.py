@@ -11,7 +11,10 @@ import re
 import requests
 from io import StringIO
 from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
 
+# Загружаем переменные окружения
+load_dotenv()
 
 # ========================================================
 # НАСТРОЙКИ
@@ -21,7 +24,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # ===== БАЗОВЫЙ URL ДЛЯ OAuth =====
-# Для локального тестирования
 BASE_URL = os.environ.get('BASE_URL', 'http://127.0.0.1:8000')
 
 # ===== OAuth НАСТРОЙКИ (из переменных окружения) =====
@@ -102,7 +104,7 @@ class Order(db.Model):
 
 oauth = OAuth(app)
 
-# Яндекс - упрощённая версия
+# Яндекс
 if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
     yandex = oauth.register(
         name='yandex',
@@ -115,7 +117,7 @@ if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
         client_kwargs={'scope': 'login:info login:email'}
     )
 
-# Google - упрощённая версия
+# Google
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     google = oauth.register(
         name='google',
@@ -125,8 +127,10 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         authorize_url='https://accounts.google.com/o/oauth2/auth',
         api_base_url='https://www.googleapis.com/oauth2/v2/',
         userinfo_endpoint='https://www.googleapis.com/oauth2/v2/userinfo',
-        client_kwargs={'scope': 'email profile'}
+        client_kwargs={'scope': 'openid email profile'}
     )
+
+
 # ========================================================
 # СОЗДАНИЕ ТАБЛИЦ
 # ========================================================
@@ -337,11 +341,12 @@ def logout():
 
 @app.route('/yandex/login')
 def yandex_login():
+    """Вход через Яндекс"""
     if 'yandex' not in globals():
         flash('❌ Яндекс OAuth не настроен', 'danger')
         return redirect(url_for('login'))
     redirect_uri = f"{BASE_URL}/yandex/callback"
-    print(f"🔍 Яндекс Redirect URI: {redirect_uri}")  # ← ДОБАВЬТЕ
+    print(f"🔍 Яндекс Redirect URI: {redirect_uri}")
     return yandex.authorize_redirect(redirect_uri)
 
 
@@ -349,11 +354,15 @@ def yandex_login():
 def yandex_callback():
     """Callback после входа через Яндекс"""
     try:
-        # Получаем токен
-        token = yandex.authorize_access_token()
+        print("🔍 Яндекс: начат callback")  # ← ДОБАВЬТЕ
         
-        # Получаем информацию о пользователе через API
+        token = yandex.authorize_access_token()
+        print(f"🔍 Яндекс: токен получен: {token}")  # ← ДОБАВЬТЕ
+        
         resp = yandex.get('info?format=json')
+        print(f"🔍 Яндекс: статус ответа: {resp.status_code}")  # ← ДОБАВЬТЕ
+        print(f"🔍 Яндекс: текст ответа: {resp.text}")  # ← ДОБАВЬТЕ
+        
         user_info = resp.json()
         
         user = get_or_create_user_by_oauth(
@@ -369,17 +378,19 @@ def yandex_callback():
         return redirect(url_for('index'))
         
     except Exception as e:
+        print(f"❌ Яндекс: ошибка: {e}")  # ← ДОБАВЬТЕ
         flash(f'❌ Ошибка входа через Яндекс: {e}', 'danger')
         return redirect(url_for('login'))
 
 
 @app.route('/google/login')
 def google_login():
+    """Вход через Google"""
     if 'google' not in globals():
         flash('❌ Google OAuth не настроен', 'danger')
         return redirect(url_for('login'))
     redirect_uri = f"{BASE_URL}/google/callback"
-    print(f"🔍 Google Redirect URI: {redirect_uri}")  # ← ДОБАВЬТЕ
+    print(f"🔍 Google Redirect URI: {redirect_uri}")
     return google.authorize_redirect(redirect_uri)
 
 
@@ -387,10 +398,7 @@ def google_login():
 def google_callback():
     """Callback после входа через Google"""
     try:
-        # Получаем токен
         token = google.authorize_access_token()
-        
-        # Получаем информацию о пользователе через API
         resp = google.get('userinfo')
         user_info = resp.json()
         

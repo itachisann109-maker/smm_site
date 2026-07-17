@@ -1,6 +1,3 @@
-/* ============================================================
-   ПЕРЕМЕННЫЕ ТЕМЫ
-   ============================================================ */
 :root {
     --bg-body: #f8f9fa;
     --bg-card: #ffffff;
@@ -53,7 +50,6 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Навигация */
 .navbar {
     background-color: var(--bg-navbar) !important;
     border-bottom: 1px solid var(--border-light);
@@ -71,7 +67,6 @@ body {
     color: var(--text-primary) !important;
 }
 
-/* Карточки */
 .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-light);
@@ -79,7 +74,6 @@ body {
     box-shadow: var(--shadow-card);
 }
 
-/* Формы */
 .form-control {
     background-color: var(--bg-input);
     border-color: var(--border-light);
@@ -91,7 +85,6 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-/* Футер */
 footer {
     background-color: var(--bg-footer);
     border-top: 1px solid var(--border-light);
@@ -99,12 +92,10 @@ footer {
     color: var(--text-secondary);
 }
 
-/* Чат-бот */
 #chatWidget button:hover {
     transform: scale(1.05);
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
     #chatWindow {
         width: 300px !important;

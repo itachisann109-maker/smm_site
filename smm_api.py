@@ -15,6 +15,7 @@ USE_REAL_API = os.environ.get('USE_REAL_API', 'True').lower() == 'true'
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
+
 def get_services():
     """Получает список всех услуг из ConfirmSMM"""
     if not USE_REAL_API or not SMM_API_KEY:
@@ -65,19 +66,18 @@ def create_order_api(service_id, link, quantity):
     # МАППИНГ УСЛУГ (обновите на основе данных из ConfirmSMM)
     # =========================================================
     service_mapping = {
-        # ===== TELEGRAM УЧАСТНИКИ =====
-        1: 2317,   # Telegram подписчики (сверхдешево, мгновенно)
-        2: 2318,   # Telegram просмотры (пополнение через 3 дня)
-        3: 2552,   # VK подписчики → временно используем Telegram
-        4: 2457,   # Instagram подписчики → временно используем Telegram
-        5: 1785,   # YouTube подписчики → временно используем Telegram
-        6: 2548,   # TikTok подписчики → временно используем Telegram
+        1: 2317,   # Telegram подписчики
+        2: 2318,   # Telegram просмотры
+        3: 2552,   # VK подписчики
+        4: 2457,   # Instagram подписчики
+        5: 1785,   # YouTube подписчики
+        6: 2548,   # TikTok подписчики
     }
     
     external_service_id = service_mapping.get(service_id)
     if not external_service_id:
         return {
-            'error': f'Услуга с ID {service_id} не настроена. Проверьте маппинг.',
+            'error': f'Услуга с ID {service_id} не настроена.',
             'status': 'error'
         }
     
@@ -89,7 +89,7 @@ def create_order_api(service_id, link, quantity):
             return {
                 'order_id': f"SIM{random.randint(10000, 99999)}",
                 'status': 'processing',
-                'message': f'Заказ принят в работу. Ожидайте ~{delay} секунд.',
+                'message': f'Заказ принят в работу.',
                 'simulated': True
             }
         else:
