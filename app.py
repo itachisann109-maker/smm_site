@@ -352,18 +352,13 @@ def yandex_login():
 
 @app.route('/yandex/callback')
 def yandex_callback():
-    print("🔍 Яндекс: начат callback")  # ← ЭТА СТРОЧКА ДОЛЖНА БЫТЬ
+    print("🔴 Яндекс: НАЧАЛ callback")  # ← ДОБАВЬТЕ САМУЮ ПЕРВУЮ СТРОЧКУ
     try:
-        # ...
-        print("🔍 Яндекс: начат callback")  # ← ДОБАВЬТЕ
-        
         token = yandex.authorize_access_token()
-        print(f"🔍 Яндекс: токен получен: {token}")  # ← ДОБАВЬТЕ
-        
+        print(f"🔴 Яндекс: токен получен: {token}")
         resp = yandex.get('info?format=json')
-        print(f"🔍 Яндекс: статус ответа: {resp.status_code}")  # ← ДОБАВЬТЕ
-        print(f"🔍 Яндекс: текст ответа: {resp.text}")  # ← ДОБАВЬТЕ
-        
+        print(f"🔴 Яндекс: статус ответа: {resp.status_code}")
+        print(f"🔴 Яндекс: текст ответа: {resp.text}")
         user_info = resp.json()
         
         user = get_or_create_user_by_oauth(
