@@ -5,3 +5,4 @@ requests
 authlib
 python-dotenv
 gunicorn
+authlib>=1.3.0

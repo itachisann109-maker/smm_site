@@ -127,7 +127,8 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         authorize_url='https://accounts.google.com/o/oauth2/auth',
         api_base_url='https://www.googleapis.com/oauth2/v2/',
         userinfo_endpoint='https://www.googleapis.com/oauth2/v2/userinfo',
-        client_kwargs={'scope': 'openid email profile'}
+        client_kwargs={'scope': 'openid email profile'},
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
     )
 
 
@@ -352,7 +353,8 @@ def yandex_login():
 
 @app.route('/yandex/callback')
 def yandex_callback():
-    print("🔴 Яндекс: НАЧАЛ callback")  # ← ДОБАВЬТЕ САМУЮ ПЕРВУЮ СТРОЧКУ
+    """Callback после входа через Яндекс"""
+    print("🔴 Яндекс: НАЧАЛ callback")
     try:
         token = yandex.authorize_access_token()
         print(f"🔴 Яндекс: токен получен: {token}")
@@ -374,10 +376,9 @@ def yandex_callback():
         return redirect(url_for('index'))
         
     except Exception as e:
-        print(f"❌ Яндекс: ошибка: {e}")  # ← ДОБАВЬТЕ
+        print(f"❌ Яндекс: ошибка: {e}")
         flash(f'❌ Ошибка входа через Яндекс: {e}', 'danger')
         return redirect(url_for('login'))
-        
 
 
 @app.route('/google/login')
