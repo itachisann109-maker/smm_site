@@ -12,6 +12,9 @@ import requests
 from io import StringIO
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -36,6 +39,15 @@ YANDEX_CLIENT_SECRET = os.environ.get('YANDEX_CLIENT_SECRET')
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
 
+# ===== НАСТРОЙКИ УВЕДОМЛЕНИЙ =====
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@sochyper.ru')
+SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.yandex.ru')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
+SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_ADMIN_CHAT_ID = os.environ.get('TELEGRAM_ADMIN_CHAT_ID', '')
+
 # ===== БАЗА ДАННЫХ =====
 basedir = os.path.abspath(os.path.dirname(__file__))
 DATABASE_URL = os.environ.get('DATABASE_URL', f'sqlite:///' + os.path.join(basedir, 'smm.db'))
@@ -45,6 +57,88 @@ db = SQLAlchemy(app)
 
 # ===== ИМПОРТ SMM-API =====
 from smm_api import create_order_api, check_order_status_api, USE_REAL_API, get_balance, get_services
+
+
+# ========================================================
+# ФУНКЦИИ УВЕДОМЛЕНИЙ
+# ========================================================
+
+def send_telegram_message(message):
+    """Отправляет уведомление в Telegram"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_ADMIN_CHAT_ID:
+        return False
+    
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            'chat_id': TELEGRAM_ADMIN_CHAT_ID,
+            'text': message,
+            'parse_mode': 'HTML'
+        }
+        response = requests.post(url, data=payload, timeout=10)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"❌ Ошибка отправки в Telegram: {e}")
+        return False
+
+
+def send_email_notification(subject, body):
+    """Отправляет уведомление на email"""
+    if not SMTP_USER or not SMTP_PASSWORD:
+        return False
+    
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USER
+        msg['To'] = ADMIN_EMAIL
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка отправки email: {e}")
+        return False
+
+
+def notify_admin(order_id, user_username, service_name, quantity, total_price, user_balance=None, action='new_order'):
+    """Отправляет уведомление администратору"""
+    if action == 'new_order':
+        subject = f"🔔 Новый заказ #{order_id}"
+        message = f"""
+📦 <b>Новый заказ #{order_id}</b>
+
+👤 Пользователь: {user_username}
+📱 Услуга: {service_name}
+📊 Количество: {quantity}
+💰 Сумма: {total_price} ₽
+
+🔗 Ссылка: https://sochyper.ru/admin
+"""
+    elif action == 'deposit':
+        subject = f"💰 Пополнение баланса"
+        message = f"""
+💰 <b>Пополнение баланса</b>
+
+👤 Пользователь: {user_username}
+💵 Сумма: {total_price} ₽
+🆕 Новый баланс: {user_balance} ₽
+
+🔗 Ссылка: https://sochyper.ru/admin
+"""
+    else:
+        return
+    
+    # Отправляем в Telegram
+    send_telegram_message(message)
+    
+    # Отправляем на Email (без HTML-тегов)
+    plain_message = message.replace('<b>', '').replace('</b>', '')
+    send_email_notification(subject, plain_message)
 
 
 # ========================================================
@@ -256,6 +350,18 @@ def update_order_statuses():
 
 
 # ========================================================
+# ОБРАБОТЧИКИ ОШИБОК
+# ========================================================
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Кастомная страница 404"""
+    grouped_services = get_grouped_services()
+    user = get_current_user()
+    return render_template('404.html', user=user, grouped_services=grouped_services), 404
+
+
+# ========================================================
 # МАРШРУТЫ
 # ========================================================
 
@@ -433,7 +539,27 @@ def yandex_verify():
 
 
 # ========================================================
-# ОСТАЛЬНЫЕ МАРШРУТЫ
+# ПРАВОВЫЕ СТРАНИЦЫ
+# ========================================================
+
+@app.route('/privacy')
+def privacy():
+    """Страница политики конфиденциальности"""
+    grouped_services = get_grouped_services()
+    user = get_current_user()
+    return render_template('privacy.html', user=user, grouped_services=grouped_services)
+
+
+@app.route('/offer')
+def offer():
+    """Страница публичной оферты"""
+    grouped_services = get_grouped_services()
+    user = get_current_user()
+    return render_template('offer.html', user=user, grouped_services=grouped_services)
+
+
+# ========================================================
+# ОСНОВНЫЕ МАРШРУТЫ
 # ========================================================
 
 @app.route('/services')
@@ -503,6 +629,20 @@ def order(service_id):
         
         db.session.add(order)
         db.session.commit()
+        
+        # === ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ===
+        try:
+            notify_admin(
+                order_id=order.id,
+                user_username=user.username,
+                service_name=service.name,
+                quantity=quantity,
+                total_price=total,
+                action='new_order'
+            )
+        except Exception as e:
+            print(f"⚠️ Ошибка уведомления: {e}")
+        # ==========================================
         
         flash(f'✅ Заказ оформлен! ID: {order.id}. {api_result.get("message", "Ожидайте выполнения.")}', 'success')
         return redirect(url_for('index'))
@@ -575,6 +715,21 @@ def deposit():
         amount = float(request.form.get('amount'))
         user.balance += amount
         db.session.commit()
+        
+        # === ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ===
+        try:
+            notify_admin(
+                order_id=0,
+                user_username=user.username,
+                service_name='Пополнение баланса',
+                quantity=1,
+                total_price=amount,
+                user_balance=user.balance,
+                action='deposit'
+            )
+        except Exception as e:
+            print(f"⚠️ Ошибка уведомления: {e}")
+        # ==========================================
         
         flash(f'Баланс пополнен на {amount} руб.', 'success')
         return redirect(url_for('index'))

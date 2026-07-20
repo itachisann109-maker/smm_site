@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div style="font-size: 6rem; color: var(--text-muted); margin-bottom: 20px;">
+                <i class="fas fa-search"></i>
+            </div>
+            <h1 style="font-size: 4rem; font-weight: 700; color: var(--text-primary);">404</h1>
+            <h2 style="color: var(--text-secondary); margin-bottom: 20px;">Страница не найдена</h2>
+            <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto 30px;">
+                К сожалению, страница, которую вы ищете, не существует или была перемещена.
+            </p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary" style="border-radius: 50px; padding: 12px 40px;">
+                <i class="fas fa-home me-2"></i>Вернуться на главную
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

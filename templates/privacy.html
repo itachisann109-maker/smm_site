@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4" style="color: var(--text-primary); font-weight: 700;">
+                <i class="fas fa-shield-alt me-2" style="color: var(--link-color);"></i>Политика конфиденциальности
+            </h1>
+            <p class="text-muted">Последнее обновление: 20 июля 2026 г.</p>
+
+            <div class="card p-4" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px;">
+                <h4>1. Общие положения</h4>
+                <p>Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей сайта SOCHYPER (далее — «Сайт»).</p>
+
+                <h4 class="mt-4">2. Какие данные мы собираем</h4>
+                <ul>
+                    <li><strong>Имя пользователя</strong> — для идентификации</li>
+                    <li><strong>Email</strong> — для связи и восстановления пароля</li>
+                    <li><strong>IP-адрес</strong> — для защиты от мошенничества</li>
+                    <li><strong>Данные OAuth</strong> (Google, Яндекс) — только ID и email</li>
+                </ul>
+
+                <h4 class="mt-4">3. Как мы используем данные</h4>
+                <ul>
+                    <li>Для регистрации и авторизации</li>
+                    <li>Для обработки заказов</li>
+                    <li>Для отправки уведомлений о статусе заказов</li>
+                    <li>Для улучшения работы сайта</li>
+                </ul>
+
+                <h4 class="mt-4">4. Передача данных третьим лицам</h4>
+                <p>Мы не передаём ваши персональные данные третьим лицам, за исключением случаев, предусмотренных законодательством РФ.</p>
+
+                <h4 class="mt-4">5. Хранение данных</h4>
+                <p>Ваши данные хранятся на защищённых серверах и сохраняются до тех пор, пока вы используете наш сервис.</p>
+
+                <h4 class="mt-4">6. Ваши права</h4>
+                <ul>
+                    <li>Запросить копию ваших данных</li>
+                    <li>Изменить или удалить ваши данные</li>
+                    <li>Отозвать согласие на обработку данных</li>
+                </ul>
+
+                <h4 class="mt-4">7. Контакты</h4>
+                <p>По вопросам обработки данных вы можете связаться с нами:</p>
+                <ul>
+                    <li><strong>Email:</strong> support@sochyper.ru</li>
+                    <li><strong>Telegram:</strong> @sochyper_bot</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

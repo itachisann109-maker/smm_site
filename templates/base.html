@@ -485,11 +485,37 @@
 
     <!-- ===== ФУТЕР ===== -->
     <footer>
-        <div class="container text-center">
-            <p class="mb-0" style="font-size: 0.85rem;">© 2026 SOCHYPER. Все права защищены.</p>
-            <small style="font-size: 0.7rem; color: var(--text-muted);">Сделано с ❤️ для вашего продвижения</small>
+    <div class="container">
+        <div class="row text-center text-md-start">
+            <div class="col-md-4 mb-3">
+                <h6 class="fw-bold" style="color: var(--text-primary);">SOCHYPER</h6>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Продвижение в соцсетях за пару кликов</p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h6 style="color: var(--text-primary);">Контакты</h6>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <i class="fas fa-envelope me-1"></i> support@sochyper.ru
+                </p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <i class="fab fa-telegram me-1"></i> @sochyper_bot
+                </p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h6 style="color: var(--text-primary);">Правовая информация</h6>
+                <a href="{{ url_for('privacy') }}" style="font-size: 0.85rem; color: var(--link-color); text-decoration: none; display: block;">
+                    Политика конфиденциальности
+                </a>
+                <a href="{{ url_for('offer') }}" style="font-size: 0.85rem; color: var(--link-color); text-decoration: none; display: block;">
+                    Публичная оферта
+                </a>
+            </div>
         </div>
-    </footer>
+        <hr style="border-color: var(--border-light); margin: 15px 0;">
+        <p class="text-center mb-0" style="font-size: 0.8rem; color: var(--text-muted);">
+            © 2026 SOCHYPER. Все права защищены.
+        </p>
+    </div>
+</footer>
 
     <!-- ===== МОДАЛЬНОЕ ОКНО ПОПОЛНЕНИЯ ===== -->
     <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
