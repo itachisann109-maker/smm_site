@@ -428,7 +428,7 @@ def yandex_verify():
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
-<body>Verification: 38cf78d06142ad9d</body>
+<body>Verification: 30cf70d06142ad9d</body>
 </html>'''
 
 
