@@ -16,14 +16,19 @@
 
             <div class="mb-4">
                 <label class="form-label fw-semibold" style="color: var(--text-primary);">Сумма пополнения</label>
+                <p class="text-muted small">Минимальная сумма — <strong>500 ₽</strong></p>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="500">500 ₽</button>
                     <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="1000">1 000 ₽</button>
                     <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="3000">3 000 ₽</button>
                     <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="5000">5 000 ₽</button>
+                    <button type="button" class="btn btn-outline-secondary amount-btn" data-amount="10000">10 000 ₽</button>
                 </div>
-                <input type="number" class="form-control" id="amountInput" min="1" step="1" placeholder="Введите свою сумму"
-                       style="background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-primary);">
+                <div class="input-group">
+                    <span class="input-group-text" style="background: var(--bg-code); border: 1px solid var(--border-light); border-right: none; color: var(--text-secondary); border-radius: 8px 0 0 8px;">₽</span>
+                    <input type="number" class="form-control" id="amountInput" min="500" step="1" placeholder="Введите сумму (от 500 ₽)" style="background: var(--bg-input); border: 1px solid var(--border-light); border-left: none; color: var(--text-primary); border-radius: 0 8px 8px 0;">
+                </div>
+                <div id="amountWarning" class="text-danger small mt-1" style="display: none;">❌ Минимальная сумма — 500 ₽</div>
             </div>
 
             <div class="mb-4">
@@ -46,7 +51,7 @@
                 </div>
             </div>
 
-            <button class="btn btn-success w-100" id="depositBtn" style="font-weight: 600; padding: 12px;">
+            <button class="btn btn-success w-100" id="depositBtn" style="font-weight: 600; padding: 12px; background: var(--btn-dark-bg); color: var(--btn-dark-text); border: none; border-radius: 10px;">
                 <i class="fas fa-check-circle me-2"></i>Пополнить
             </button>
 
@@ -54,60 +59,87 @@
         </div>
 
         <div class="text-center mt-3">
-            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">На главную</a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary" style="border-radius: 10px;">На главную</a>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const amountBtns = document.querySelectorAll('.amount-btn');
-        const amountInput = document.getElementById('amountInput');
+document.addEventListener('DOMContentLoaded', function() {
+    const amountBtns = document.querySelectorAll('.amount-btn');
+    const amountInput = document.getElementById('amountInput');
+    const depositBtn = document.getElementById('depositBtn');
+    const amountWarning = document.getElementById('amountWarning');
 
-        amountBtns.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                amountBtns.forEach(function(b) { b.classList.remove('active'); });
-                this.classList.add('active');
-                amountInput.value = this.dataset.amount;
-            });
-        });
-
-        amountInput.addEventListener('input', function() {
+    // Кнопки-суммы
+    amountBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
             amountBtns.forEach(function(b) { b.classList.remove('active'); });
-        });
-
-        document.getElementById('depositBtn').addEventListener('click', function() {
-            const amount = amountInput.value;
-            if (!amount || parseFloat(amount) <= 0) {
-                alert('Пожалуйста, введите сумму пополнения');
-                return;
-            }
-
-            const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
-            if (!selectedMethod) {
-                alert('Пожалуйста, выберите способ оплаты');
-                return;
-            }
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = "{{ url_for('deposit') }}";
-
-            const amountField = document.createElement('input');
-            amountField.type = 'hidden';
-            amountField.name = 'amount';
-            amountField.value = amount;
-            form.appendChild(amountField);
-
-            const methodField = document.createElement('input');
-            methodField.type = 'hidden';
-            methodField.name = 'payment_method';
-            methodField.value = selectedMethod.value;
-            form.appendChild(methodField);
-
-            document.body.appendChild(form);
-            form.submit();
+            this.classList.add('active');
+            amountInput.value = this.dataset.amount;
+            amountWarning.style.display = 'none';
         });
     });
+
+    // Проверка при вводе
+    amountInput.addEventListener('input', function() {
+        amountBtns.forEach(function(b) { b.classList.remove('active'); });
+        const val = parseFloat(this.value);
+        if (val < 500 && val > 0) {
+            amountWarning.style.display = 'block';
+        } else {
+            amountWarning.style.display = 'none';
+        }
+    });
+
+    // Отправка формы
+    depositBtn.addEventListener('click', function() {
+        const amount = parseFloat(amountInput.value);
+        
+        if (!amount || amount <= 0) {
+            alert('❌ Пожалуйста, введите сумму пополнения');
+            amountInput.focus();
+            return;
+        }
+        
+        if (amount < 500) {
+            alert('❌ Минимальная сумма пополнения — 500 ₽');
+            amountInput.focus();
+            return;
+        }
+
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (!selectedMethod) {
+            alert('❌ Пожалуйста, выберите способ оплаты');
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ url_for('deposit') }}";
+
+        const amountField = document.createElement('input');
+        amountField.type = 'hidden';
+        amountField.name = 'amount';
+        amountField.value = amount;
+        form.appendChild(amountField);
+
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = 'payment_method';
+        methodField.value = selectedMethod.value;
+        form.appendChild(methodField);
+
+        document.body.appendChild(form);
+        form.submit();
+    });
+
+    // Enter в поле суммы
+    amountInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            depositBtn.click();
+        }
+    });
+});
 </script>
 {% endblock %}

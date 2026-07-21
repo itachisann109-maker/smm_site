@@ -11,7 +11,7 @@
             <div style="background: var(--bg-code); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
                 <h5 style="color: var(--text-primary); font-weight: 600;">{{ service.name }}</h5>
                 <p class="text-muted" style="margin-bottom: 4px;">{{ service.description }}</p>
-                <p style="margin-bottom: 0;"><strong style="color: var(--text-primary);">Цена:</strong> {{ service.price }} ₽ за 1000 единиц</p>
+                <p style="margin-bottom: 0;"><strong style="color: var(--text-primary);">Цена:</strong> {{ service.price }} ₽ за 1 единицу</p>
             </div>
             
             <form method="POST" action="{{ url_for('order', service_id=service.id) }}">
@@ -82,6 +82,27 @@
         function updateTotal() {
             var quantity = parseInt(quantityInput.value, 10) || 0;
             var total = (servicePrice * quantity / 1000).toFixed(2);
+            totalSpan.textContent = total + ' ₽';
+        }
+
+        quantityInput.addEventListener('input', updateTotal);
+        updateTotal();
+    });
+})();
+</script>
+<script>
+(function() {
+    'use strict';
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var dataEl = document.getElementById('orderData');
+        var servicePrice = parseFloat(dataEl.getAttribute('data-price')) || 0;
+        var quantityInput = document.getElementById('quantity');
+        var totalSpan = document.getElementById('totalPrice');
+
+        function updateTotal() {
+            var quantity = parseInt(quantityInput.value, 10) || 0;
+            var total = (servicePrice * quantity).toFixed(2);
             totalSpan.textContent = total + ' ₽';
         }
 

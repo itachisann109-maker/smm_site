@@ -29,13 +29,9 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 # ===== БАЗОВЫЙ URL ДЛЯ OAuth =====
 BASE_URL = os.environ.get('BASE_URL', 'https://sochyper.ru')
 
-# ===== OAuth НАСТРОЙКИ (из переменных окружения) =====
-
-# Яндекс OAuth
+# ===== OAuth НАСТРОЙКИ =====
 YANDEX_CLIENT_ID = os.environ.get('YANDEX_CLIENT_ID')
 YANDEX_CLIENT_SECRET = os.environ.get('YANDEX_CLIENT_SECRET')
-
-# Google OAuth
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
 
@@ -56,7 +52,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # ===== ИМПОРТ SMM-API =====
-from smm_api import create_order_api, check_order_status_api, USE_REAL_API, get_balance, get_services
+from smm_api import create_order_api, check_order_status_api, cancel_order_api, USE_REAL_API, get_balance, get_services
 
 
 # ========================================================
@@ -133,10 +129,7 @@ def notify_admin(order_id, user_username, service_name, quantity, total_price, u
     else:
         return
     
-    # Отправляем в Telegram
     send_telegram_message(message)
-    
-    # Отправляем на Email (без HTML-тегов)
     plain_message = message.replace('<b>', '').replace('</b>', '')
     send_email_notification(subject, plain_message)
 
@@ -146,7 +139,6 @@ def notify_admin(order_id, user_username, service_name, quantity, total_price, u
 # ========================================================
 
 class User(db.Model):
-    """Модель пользователя"""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -159,24 +151,16 @@ class User(db.Model):
     provider_id = db.Column(db.String(100), nullable=True)
     orders = db.relationship('Order', backref='user', lazy=True)
 
-    def __repr__(self):
-        return f'<User {self.username}>'
-
 
 class Service(db.Model):
-    """Модель услуги (накрутка)"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(300))
     price = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50))
 
-    def __repr__(self):
-        return f'<Service {self.name}>'
-
 
 class Order(db.Model):
-    """Модель заказа"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
@@ -188,9 +172,6 @@ class Order(db.Model):
     external_order_id = db.Column(db.String(50), nullable=True)
     service = db.relationship('Service', backref='orders')
 
-    def __repr__(self):
-        return f'<Order {self.id} - {self.status}>'
-
 
 # ========================================================
 # ИНИЦИАЛИЗАЦИЯ OAuth
@@ -198,7 +179,6 @@ class Order(db.Model):
 
 oauth = OAuth(app)
 
-# Яндекс
 if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
     yandex = oauth.register(
         name='yandex',
@@ -211,7 +191,6 @@ if YANDEX_CLIENT_ID and YANDEX_CLIENT_SECRET:
         client_kwargs={'scope': 'login:info login:email'}
     )
 
-# Google
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     google = oauth.register(
         name='google',
@@ -227,57 +206,46 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 
 
 # ========================================================
-# СОЗДАНИЕ ТАБЛИЦ
+# СОЗДАНИЕ ТАБЛИЦ И НАЧАЛЬНЫХ ДАННЫХ
 # ========================================================
+
 with app.app_context():
     db.create_all()
     
     if Service.query.count() == 0:
         services = [
             # ===== TELEGRAM =====
-            Service(name='Telegram подписчики (Ultra Cheap, Instant)', description='Быстрые подписчики для канала/группы. Без возврата.', price=1.26, category='telegram'),
-            Service(name='Telegram подписчики (90 Days NonDrop)', description='Качественные подписчики с гарантией 90 дней', price=54.00, category='telegram'),
-            Service(name='Telegram подписчики (Lifetime Non-Drop)', description='Подписчики навсегда. Гарантия качества.', price=85.05, category='telegram'),
-            Service(name='Telegram просмотры постов (50k/hour)', description='Быстрые просмотры постов. До 50к в час.', price=0.225, category='telegram'),
-            Service(name='Telegram просмотры постов (Last 5)', description='Просмотры последних 5 постов', price=1.17, category='telegram'),
-            Service(name='Telegram реакции (Mixed Positive)', description='Смешанные позитивные реакции 👍🤩🎉🔥❤️', price=1.17, category='telegram'),
-            Service(name='Telegram реакции ❤️', description='Реакция ❤️ к посту + бесплатные просмотры', price=1.17, category='telegram'),
-            Service(name='Telegram реакции 🔥', description='Реакция 🔥 к посту + бесплатные просмотры', price=1.17, category='telegram'),
-            Service(name='Telegram Premium подписчики (7 дней)', description='Премиум-подписчики на 7 дней', price=223.21, category='telegram'),
-            Service(name='Telegram Premium подписчики (30 дней)', description='Премиум-подписчики на 30 дней', price=486.38, category='telegram'),
-            Service(name='Telegram Premium подписчики (90 дней)', description='Премиум-подписчики на 90 дней', price=1461.08, category='telegram'),
-            Service(name='Telegram Boost канала (30+ дней)', description='Буст канала на 30+ дней', price=23940.00, category='telegram'),
+            Service(name='Telegram подписчики (быстрые)', description='Мгновенная накрутка. Без отписов.', price=0.65, category='telegram'),
+            Service(name='Telegram подписчики (качественные, 90 дней)', description='Гарантия 90 дней. Без ботов.', price=1.20, category='telegram'),
+            Service(name='Telegram подписчики (навсегда)', description='Подписчики навсегда. Гарантия.', price=1.50, category='telegram'),
+            Service(name='Telegram просмотры постов', description='Просмотры постов. От 1000.', price=0.14, category='telegram'),
+            Service(name='Telegram реакции (любые)', description='Реакции на посты. Выберите любую.', price=0.18, category='telegram'),
+            Service(name='Telegram Premium подписчики (7 дней)', description='Премиум-подписчики на 7 дней', price=2.20, category='telegram'),
+            Service(name='Telegram Premium подписчики (30 дней)', description='Премиум-подписчики на 30 дней', price=2.80, category='telegram'),
+            Service(name='Telegram рефералы в бот', description='Привлечение рефералов в Telegram бота', price=1.20, category='telegram'),
             
             # ===== VK =====
-            Service(name='VK подписчики (Fast)', description='Быстрая накрутка подписчиков в группу', price=63.00, category='vk'),
-            Service(name='VK подписчики (Low Drop)', description='Подписчики с минимальным отписом', price=40.50, category='vk'),
-            Service(name='VK лайки (Fast)', description='Быстрые лайки для постов', price=38.54, category='vk'),
-            Service(name='VK просмотры постов', description='Просмотры записей на стене', price=0.126, category='vk'),
-            Service(name='VK просмотры видео', description='Просмотры видео в VK', price=0.90, category='vk'),
-            Service(name='VK просмотры клипов', description='Просмотры коротких видео (клипов)', price=0.90, category='vk'),
-            Service(name='VK просмотры стены', description='Просмотры записей на стене (Wall Views)', price=0.90, category='vk'),
+            Service(name='VK подписчики (быстрые)', description='Быстрая накрутка подписчиков.', price=0.37, category='vk'),
+            Service(name='VK подписчики (качественные)', description='Качественные подписчики. Минимальный отпис.', price=0.55, category='vk'),
+            Service(name='VK лайки', description='Лайки для постов.', price=0.18, category='vk'),
+            Service(name='VK просмотры постов', description='Просмотры записей.', price=0.09, category='vk'),
+            Service(name='VK просмотры видео', description='Просмотры видео.', price=0.11, category='vk'),
+            Service(name='VK заявки в друзья', description='Заявки в друзья от реальных пользователей.', price=0.60, category='vk'),
             
             # ===== YOUTUBE =====
-            Service(name='YouTube подписчики (Max 30K/Day)', description='Подписчики до 30 000 в день', price=132.21, category='youtube'),
-            Service(name='YouTube подписчики (Max 50K/Day)', description='Подписчики до 50 000 в день', price=108.81, category='youtube'),
-            Service(name='YouTube подписчики (Max 100K/Day)', description='Подписчики до 100 000 в день', price=145.08, category='youtube'),
-            Service(name='YouTube лайки (Max 50K)', description='Лайки для видео до 50 000', price=200.49, category='youtube'),
-            Service(name='YouTube лайки (Max 100K)', description='Лайки для видео до 100 000', price=255.28, category='youtube'),
-            Service(name='YouTube просмотры (Social Ads, Min 10K)', description='Просмотры с соцсетей. Минимум 10 000', price=98.53, category='youtube'),
-            Service(name='YouTube просмотры (Social Ads, Min 3K)', description='Просмотры с соцсетей. Минимум 3 000', price=122.59, category='youtube'),
-            Service(name='YouTube Shorts просмотры (Max 100M)', description='Просмотры коротких видео (Shorts)', price=111.20, category='youtube'),
-            Service(name='YouTube Shorts лайки (Max 50K)', description='Лайки для коротких видео (Shorts)', price=362.70, category='youtube'),
+            Service(name='YouTube подписчики (быстрые)', description='Подписчики до 30 000 в день.', price=1.40, category='youtube'),
+            Service(name='YouTube подписчики (качественные)', description='Качественные подписчики.', price=1.80, category='youtube'),
+            Service(name='YouTube лайки', description='Лайки для видео.', price=0.46, category='youtube'),
+            Service(name='YouTube просмотры (органические)', description='Органические просмотры видео.', price=0.32, category='youtube'),
+            Service(name='YouTube Shorts просмотры', description='Просмотры коротких видео.', price=0.28, category='youtube'),
             
             # ===== TIKTOK =====
-            Service(name='TikTok подписчики (Max 25K, Quality)', description='Качественные подписчики до 25 000', price=157.10, category='tiktok'),
-            Service(name='TikTok подписчики (Max 50K)', description='Подписчики до 50 000', price=691.20, category='tiktok'),
-            Service(name='TikTok подписчики (Max 100K, HQ)', description='Высококачественные подписчики до 100 000', price=162.00, category='tiktok'),
-            Service(name='TikTok лайки (Max 500K, HQ)', description='Лайки до 500 000', price=9.89, category='tiktok'),
-            Service(name='TikTok лайки (Max 500K, Speed 50K/Day)', description='Быстрые лайки до 500 000', price=4.91, category='tiktok'),
-            Service(name='TikTok просмотры видео (Non-Drop)', description='Просмотры видео без возврата', price=6.30, category='tiktok'),
-            Service(name='TikTok репосты/шары (Max 100M)', description='Репосты видео до 100 000 000', price=6.55, category='tiktok'),
-            Service(name='TikTok сохранения (Max 100K)', description='Сохранения видео в избранное', price=20.16, category='tiktok'),
-            Service(name='TikTok Live Stream просмотры (15 мин)', description='Просмотры прямого эфира (15 минут)', price=567.00, category='tiktok'),
+            Service(name='TikTok подписчики (быстрые)', description='Быстрые подписчики.', price=0.83, category='tiktok'),
+            Service(name='TikTok подписчики (качественные)', description='Качественные подписчики. Гарантия.', price=1.20, category='tiktok'),
+            Service(name='TikTok лайки', description='Лайки для видео.', price=0.18, category='tiktok'),
+            Service(name='TikTok просмотры', description='Просмотры видео.', price=0.14, category='tiktok'),
+            Service(name='TikTok репосты', description='Репосты видео.', price=0.22, category='tiktok'),
+            Service(name='TikTok сохранения', description='Сохранения видео в избранное.', price=0.28, category='tiktok'),
         ]
         db.session.add_all(services)
         db.session.commit()
@@ -296,6 +264,8 @@ with app.app_context():
             db.session.add(admin)
             db.session.commit()
             print('✅ Администратор создан: junkkk_cherkessk890890 / Lobodina74!')
+
+
 # ========================================================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # ========================================================
@@ -318,9 +288,7 @@ def get_grouped_services():
 
 
 def get_or_create_user_by_oauth(provider, provider_id, name, email, avatar=None):
-    """Находит или создаёт пользователя через OAuth"""
     user = User.query.filter_by(provider=provider, provider_id=provider_id).first()
-    
     if not user:
         if email:
             user = User.query.filter_by(email=email).first()
@@ -351,7 +319,6 @@ def get_or_create_user_by_oauth(provider, provider_id, name, email, avatar=None)
         )
         db.session.add(user)
         db.session.commit()
-    
     return user
 
 
@@ -360,7 +327,6 @@ def update_order_statuses():
         while True:
             try:
                 processing_orders = Order.query.filter_by(status='processing').all()
-                
                 for order in processing_orders:
                     if order.external_order_id and 'SIM' not in order.external_order_id:
                         result = check_order_status_api(order.external_order_id)
@@ -377,28 +343,76 @@ def update_order_statuses():
                             order.status = 'done'
                             db.session.commit()
                             print(f"✅ Симуляция: заказ #{order.id} выполнен!")
-                
                 time.sleep(30)
-                
             except Exception as e:
                 print(f"Ошибка в фоновом процессе: {e}")
                 time.sleep(60)
 
 
 # ========================================================
-# ОБРАБОТЧИКИ ОШИБОК
+# ЗАПУСК ФОНОВОГО ПОТОКА (для gunicorn)
 # ========================================================
 
-@app.errorhandler(404)
-def page_not_found(e):
-    """Кастомная страница 404"""
+def start_background_thread():
+    """Запускает фоновый поток для обновления статусов заказов"""
+    thread = threading.Thread(target=update_order_statuses, daemon=True)
+    thread.start()
+    print("🔄 Фоновый процесс обновления статусов запущен")
+
+# Запускаем поток при старте приложения (для gunicorn)
+start_background_thread()
+
+
+# ========================================================
+# HEALTH CHECK
+# ========================================================
+
+@app.route('/health')
+def health_check():
+    """Проверка здоровья приложения"""
+    return 'OK', 200
+
+
+@app.route('/healthz')
+def healthz():
+    """Альтернативный health check"""
+    return 'OK', 200
+
+
+# ========================================================
+# ЯНДЕКС ВЕБМАСТЕР - ПОДТВЕРЖДЕНИЕ ПРАВ
+# ========================================================
+
+@app.route('/yandex_30cf70d06142ad9d.html')
+def yandex_verify():
+    return '''<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>Verification: 30cf70d06142ad9d</body>
+</html>'''
+
+
+# ========================================================
+# ПРАВОВЫЕ СТРАНИЦЫ
+# ========================================================
+
+@app.route('/privacy')
+def privacy():
     grouped_services = get_grouped_services()
     user = get_current_user()
-    return render_template('404.html', user=user, grouped_services=grouped_services), 404
+    return render_template('privacy.html', user=user, grouped_services=grouped_services)
+
+
+@app.route('/offer')
+def offer():
+    grouped_services = get_grouped_services()
+    user = get_current_user()
+    return render_template('offer.html', user=user, grouped_services=grouped_services)
 
 
 # ========================================================
-# МАРШРУТЫ
+# ОСНОВНЫЕ МАРШРУТЫ
 # ========================================================
 
 @app.route('/')
@@ -412,7 +426,6 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     grouped_services = get_grouped_services()
-    
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
@@ -431,7 +444,6 @@ def register():
             return render_template('register.html', grouped_services=grouped_services)
         
         hashed = generate_password_hash(password)
-        
         user = User(
             username=username,
             email=email,
@@ -451,17 +463,14 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     grouped_services = get_grouped_services()
-    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
         user = User.query.filter_by(username=username).first()
         
         if user and user.password_hash and check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             flash('Добро пожаловать!', 'success')
-            
             if user.is_admin:
                 return redirect(url_for('admin'))
             return redirect(url_for('index'))
@@ -484,25 +493,18 @@ def logout():
 
 @app.route('/yandex/login')
 def yandex_login():
-    """Вход через Яндекс"""
     if 'yandex' not in globals():
         flash('❌ Яндекс OAuth не настроен', 'danger')
         return redirect(url_for('login'))
     redirect_uri = f"{BASE_URL}/yandex/callback"
-    print(f"🔍 Яндекс Redirect URI: {redirect_uri}")
     return yandex.authorize_redirect(redirect_uri)
 
 
 @app.route('/yandex/callback')
 def yandex_callback():
-    """Callback после входа через Яндекс"""
-    print("🔴 Яндекс: НАЧАЛ callback")
     try:
         token = yandex.authorize_access_token()
-        print(f"🔴 Яндекс: токен получен: {token}")
         resp = yandex.get('info?format=json')
-        print(f"🔴 Яндекс: статус ответа: {resp.status_code}")
-        print(f"🔴 Яндекс: текст ответа: {resp.text}")
         user_info = resp.json()
         
         user = get_or_create_user_by_oauth(
@@ -516,27 +518,22 @@ def yandex_callback():
         session['user_id'] = user.id
         flash('✅ Вход через Яндекс выполнен!', 'success')
         return redirect(url_for('index'))
-        
     except Exception as e:
-        print(f"❌ Яндекс: ошибка: {e}")
         flash(f'❌ Ошибка входа через Яндекс: {e}', 'danger')
         return redirect(url_for('login'))
 
 
 @app.route('/google/login')
 def google_login():
-    """Вход через Google"""
     if 'google' not in globals():
         flash('❌ Google OAuth не настроен', 'danger')
         return redirect(url_for('login'))
     redirect_uri = f"{BASE_URL}/google/callback"
-    print(f"🔍 Google Redirect URI: {redirect_uri}")
     return google.authorize_redirect(redirect_uri)
 
 
 @app.route('/google/callback')
 def google_callback():
-    """Callback после входа через Google"""
     try:
         token = google.authorize_access_token()
         resp = google.get('userinfo')
@@ -553,50 +550,10 @@ def google_callback():
         session['user_id'] = user.id
         flash('✅ Вход через Google выполнен!', 'success')
         return redirect(url_for('index'))
-        
     except Exception as e:
         flash(f'❌ Ошибка входа через Google: {e}', 'danger')
         return redirect(url_for('login'))
 
-
-# ========================================================
-# ЯНДЕКС ВЕБМАСТЕР - ПОДТВЕРЖДЕНИЕ ПРАВ
-# ========================================================
-
-@app.route('/yandex_30cf70d06142ad9d.html')
-def yandex_verify():
-    """Страница для подтверждения прав в Яндекс Вебмастере"""
-    return '''<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-</head>
-<body>Verification: 30cf70d06142ad9d</body>
-</html>'''
-
-
-# ========================================================
-# ПРАВОВЫЕ СТРАНИЦЫ
-# ========================================================
-
-@app.route('/privacy')
-def privacy():
-    """Страница политики конфиденциальности"""
-    grouped_services = get_grouped_services()
-    user = get_current_user()
-    return render_template('privacy.html', user=user, grouped_services=grouped_services)
-
-
-@app.route('/offer')
-def offer():
-    """Страница публичной оферты"""
-    grouped_services = get_grouped_services()
-    user = get_current_user()
-    return render_template('offer.html', user=user, grouped_services=grouped_services)
-
-
-# ========================================================
-# ОСНОВНЫЕ МАРШРУТЫ
-# ========================================================
 
 @app.route('/services')
 def services():
@@ -610,13 +567,11 @@ def services():
 def my_orders():
     user = get_current_user()
     grouped_services = get_grouped_services()
-    
     if not user:
         flash('Пожалуйста, войдите в систему', 'warning')
         return redirect(url_for('login'))
     
     orders = Order.query.filter_by(user_id=user.id).order_by(Order.created_at.desc()).all()
-    
     return render_template('my_orders.html', user=user, orders=orders, grouped_services=grouped_services)
 
 
@@ -624,7 +579,6 @@ def my_orders():
 def order(service_id):
     user = get_current_user()
     grouped_services = get_grouped_services()
-    
     if not user:
         flash('Пожалуйста, войдите в систему', 'warning')
         return redirect(url_for('login'))
@@ -634,7 +588,7 @@ def order(service_id):
     if request.method == 'POST':
         link = request.form.get('link')
         quantity = int(request.form.get('quantity'))
-        total = round(service.price * quantity / 1000, 2)
+        total = round(service.price * quantity, 2)
         
         if user.balance < total:
             flash('Недостаточно средств. Пополните баланс.', 'danger')
@@ -662,11 +616,9 @@ def order(service_id):
             order.status = 'pending'
         
         user.balance -= total
-        
         db.session.add(order)
         db.session.commit()
         
-        # === ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ===
         try:
             notify_admin(
                 order_id=order.id,
@@ -678,7 +630,6 @@ def order(service_id):
             )
         except Exception as e:
             print(f"⚠️ Ошибка уведомления: {e}")
-        # ==========================================
         
         flash(f'✅ Заказ оформлен! ID: {order.id}. {api_result.get("message", "Ожидайте выполнения.")}', 'success')
         return redirect(url_for('index'))
@@ -690,32 +641,27 @@ def order(service_id):
 def admin():
     user = get_current_user()
     grouped_services = get_grouped_services()
-    
     if not user or not user.is_admin:
         flash('Доступ запрещен', 'danger')
         return redirect(url_for('index'))
     
     orders = Order.query.order_by(Order.created_at.desc()).all()
     users = User.query.all()
-    
     return render_template('admin.html', user=user, orders=orders, users=users, grouped_services=grouped_services)
 
 
 @app.route('/admin/export/csv')
 def export_orders_csv():
     user = get_current_user()
-    
     if not user or not user.is_admin:
         flash('Доступ запрещен', 'danger')
         return redirect(url_for('index'))
     
     orders = Order.query.order_by(Order.created_at.desc()).all()
-    
     output = StringIO()
     writer = csv.writer(output)
     
     writer.writerow(['ID', 'Пользователь', 'Email', 'Услуга', 'Кол-во', 'Сумма', 'Статус', 'Ссылка', 'Внешний ID', 'Дата'])
-    
     for order in orders:
         writer.writerow([
             order.id,
@@ -742,7 +688,6 @@ def export_orders_csv():
 def deposit():
     user = get_current_user()
     grouped_services = get_grouped_services()
-    
     if not user:
         flash('Пожалуйста, войдите в систему', 'warning')
         return redirect(url_for('login'))
@@ -752,7 +697,6 @@ def deposit():
         user.balance += amount
         db.session.commit()
         
-        # === ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ===
         try:
             notify_admin(
                 order_id=0,
@@ -765,7 +709,6 @@ def deposit():
             )
         except Exception as e:
             print(f"⚠️ Ошибка уведомления: {e}")
-        # ==========================================
         
         flash(f'Баланс пополнен на {amount} руб.', 'success')
         return redirect(url_for('index'))
@@ -776,7 +719,6 @@ def deposit():
 @app.route('/payment', methods=['GET', 'POST'])
 def payment_page():
     grouped_services = get_grouped_services()
-    
     if request.method == 'POST':
         amount = float(request.form.get('amount', 0))
         method = request.form.get('method', 'sbp')
@@ -797,8 +739,18 @@ def payment_page():
     
     amount = request.args.get('amount', '0')
     method = request.args.get('method', 'sbp')
-    
     return render_template('payment.html', amount=amount, method=method, grouped_services=grouped_services)
+
+
+# ========================================================
+# ОБРАБОТЧИК ОШИБОК 404
+# ========================================================
+
+@app.errorhandler(404)
+def page_not_found(e):
+    grouped_services = get_grouped_services()
+    user = get_current_user()
+    return render_template('404.html', user=user, grouped_services=grouped_services), 404
 
 
 # ========================================================
@@ -806,9 +758,7 @@ def payment_page():
 # ========================================================
 
 if __name__ == '__main__':
-    thread = threading.Thread(target=update_order_statuses, daemon=True)
-    thread.start()
-    print("🔄 Фоновый процесс обновления статусов запущен")
+    print("🚀 Запуск Flask в режиме разработки")
     
     if USE_REAL_API:
         print("🔗 Используется реальное API ConfirmSMM")
