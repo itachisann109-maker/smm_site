@@ -229,21 +229,59 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 # ========================================================
 # СОЗДАНИЕ ТАБЛИЦ
 # ========================================================
-
 with app.app_context():
     db.create_all()
     
     if Service.query.count() == 0:
         services = [
-            Service(name='Telegram подписчики (живые)', description='Качественные подписчики для вашего Telegram-канала', price=50, category='telegram'),
-            Service(name='Telegram просмотры', description='Просмотры постов в Telegram', price=20, category='telegram'),
-            Service(name='VK подписчики', description='Подписчики в группу ВКонтакте', price=30, category='vk'),
-            Service(name='Instagram подписчики', description='Подписчики для аккаунта Instagram', price=60, category='instagram'),
-            Service(name='YouTube подписчики', description='Подписчики для YouTube-канала', price=80, category='youtube'),
-            Service(name='TikTok подписчики', description='Подписчики для TikTok-аккаунта', price=70, category='tiktok'),
+            # ===== TELEGRAM =====
+            Service(name='Telegram подписчики (Ultra Cheap, Instant)', description='Быстрые подписчики для канала/группы. Без возврата.', price=1.26, category='telegram'),
+            Service(name='Telegram подписчики (90 Days NonDrop)', description='Качественные подписчики с гарантией 90 дней', price=54.00, category='telegram'),
+            Service(name='Telegram подписчики (Lifetime Non-Drop)', description='Подписчики навсегда. Гарантия качества.', price=85.05, category='telegram'),
+            Service(name='Telegram просмотры постов (50k/hour)', description='Быстрые просмотры постов. До 50к в час.', price=0.225, category='telegram'),
+            Service(name='Telegram просмотры постов (Last 5)', description='Просмотры последних 5 постов', price=1.17, category='telegram'),
+            Service(name='Telegram реакции (Mixed Positive)', description='Смешанные позитивные реакции 👍🤩🎉🔥❤️', price=1.17, category='telegram'),
+            Service(name='Telegram реакции ❤️', description='Реакция ❤️ к посту + бесплатные просмотры', price=1.17, category='telegram'),
+            Service(name='Telegram реакции 🔥', description='Реакция 🔥 к посту + бесплатные просмотры', price=1.17, category='telegram'),
+            Service(name='Telegram Premium подписчики (7 дней)', description='Премиум-подписчики на 7 дней', price=223.21, category='telegram'),
+            Service(name='Telegram Premium подписчики (30 дней)', description='Премиум-подписчики на 30 дней', price=486.38, category='telegram'),
+            Service(name='Telegram Premium подписчики (90 дней)', description='Премиум-подписчики на 90 дней', price=1461.08, category='telegram'),
+            Service(name='Telegram Boost канала (30+ дней)', description='Буст канала на 30+ дней', price=23940.00, category='telegram'),
+            
+            # ===== VK =====
+            Service(name='VK подписчики (Fast)', description='Быстрая накрутка подписчиков в группу', price=63.00, category='vk'),
+            Service(name='VK подписчики (Low Drop)', description='Подписчики с минимальным отписом', price=40.50, category='vk'),
+            Service(name='VK лайки (Fast)', description='Быстрые лайки для постов', price=38.54, category='vk'),
+            Service(name='VK просмотры постов', description='Просмотры записей на стене', price=0.126, category='vk'),
+            Service(name='VK просмотры видео', description='Просмотры видео в VK', price=0.90, category='vk'),
+            Service(name='VK просмотры клипов', description='Просмотры коротких видео (клипов)', price=0.90, category='vk'),
+            Service(name='VK просмотры стены', description='Просмотры записей на стене (Wall Views)', price=0.90, category='vk'),
+            
+            # ===== YOUTUBE =====
+            Service(name='YouTube подписчики (Max 30K/Day)', description='Подписчики до 30 000 в день', price=132.21, category='youtube'),
+            Service(name='YouTube подписчики (Max 50K/Day)', description='Подписчики до 50 000 в день', price=108.81, category='youtube'),
+            Service(name='YouTube подписчики (Max 100K/Day)', description='Подписчики до 100 000 в день', price=145.08, category='youtube'),
+            Service(name='YouTube лайки (Max 50K)', description='Лайки для видео до 50 000', price=200.49, category='youtube'),
+            Service(name='YouTube лайки (Max 100K)', description='Лайки для видео до 100 000', price=255.28, category='youtube'),
+            Service(name='YouTube просмотры (Social Ads, Min 10K)', description='Просмотры с соцсетей. Минимум 10 000', price=98.53, category='youtube'),
+            Service(name='YouTube просмотры (Social Ads, Min 3K)', description='Просмотры с соцсетей. Минимум 3 000', price=122.59, category='youtube'),
+            Service(name='YouTube Shorts просмотры (Max 100M)', description='Просмотры коротких видео (Shorts)', price=111.20, category='youtube'),
+            Service(name='YouTube Shorts лайки (Max 50K)', description='Лайки для коротких видео (Shorts)', price=362.70, category='youtube'),
+            
+            # ===== TIKTOK =====
+            Service(name='TikTok подписчики (Max 25K, Quality)', description='Качественные подписчики до 25 000', price=157.10, category='tiktok'),
+            Service(name='TikTok подписчики (Max 50K)', description='Подписчики до 50 000', price=691.20, category='tiktok'),
+            Service(name='TikTok подписчики (Max 100K, HQ)', description='Высококачественные подписчики до 100 000', price=162.00, category='tiktok'),
+            Service(name='TikTok лайки (Max 500K, HQ)', description='Лайки до 500 000', price=9.89, category='tiktok'),
+            Service(name='TikTok лайки (Max 500K, Speed 50K/Day)', description='Быстрые лайки до 500 000', price=4.91, category='tiktok'),
+            Service(name='TikTok просмотры видео (Non-Drop)', description='Просмотры видео без возврата', price=6.30, category='tiktok'),
+            Service(name='TikTok репосты/шары (Max 100M)', description='Репосты видео до 100 000 000', price=6.55, category='tiktok'),
+            Service(name='TikTok сохранения (Max 100K)', description='Сохранения видео в избранное', price=20.16, category='tiktok'),
+            Service(name='TikTok Live Stream просмотры (15 мин)', description='Просмотры прямого эфира (15 минут)', price=567.00, category='tiktok'),
         ]
         db.session.add_all(services)
         db.session.commit()
+        print(f'✅ Добавлено {len(services)} услуг')
         
         if not User.query.filter_by(username='junkkk_cherkessk890890').first():
             admin = User(
@@ -258,8 +296,6 @@ with app.app_context():
             db.session.add(admin)
             db.session.commit()
             print('✅ Администратор создан: junkkk_cherkessk890890 / Lobodina74!')
-
-
 # ========================================================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # ========================================================
