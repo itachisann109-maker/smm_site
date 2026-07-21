@@ -1,49 +1,216 @@
-# =========================================================
-# МАППИНГ УСЛУГ (внутренний ID → внешний ID из API)
-# =========================================================
-service_mapping = {
-    # ===== TELEGRAM =====
-    1: 2317,   # Telegram подписчики (Ultra Cheap, Instant, No Refill)
-    2: 2548,   # Telegram подписчики (90 Days NonDrop)
-    3: 2457,   # Telegram подписчики (Lifetime Non-Drop)
-    4: 2406,   # Telegram просмотры постов (50k/hour)
-    5: 2529,   # Telegram просмотры постов (Last 5)
-    6: 2466,   # Telegram реакции (Mixed Positive)
-    7: 2471,   # Telegram реакции ❤️
-    8: 2472,   # Telegram реакции 🔥
-    9: 2432,   # Telegram Premium подписчики (7 дней)
-    10: 2437,  # Telegram Premium подписчики (30 дней)
-    11: 2439,  # Telegram Premium подписчики (90 дней)
-    12: 2448,  # Telegram Boost канала (30+ дней)
+import requests
+import random
+import time
+import logging
+import os
+
+# ========================================================
+# НАСТРОЙКИ API (из переменных окружения)
+# ========================================================
+
+SMM_API_KEY = os.environ.get('SMM_API_KEY', '')
+SMM_API_URL = 'https://confirmsmm.com/api/v2'
+USE_REAL_API = os.environ.get('USE_REAL_API', 'False').lower() == 'true'
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+
+
+def get_services():
+    """Получает список всех услуг из ConfirmSMM"""
+    if not USE_REAL_API or not SMM_API_KEY:
+        return {'error': 'API отключено или ключ не задан', 'status': 'error'}
     
-    # ===== VK =====
-    13: 1956,  # VK подписчики (Fast)
-    14: 1305,  # VK подписчики (Low Drop)
-    15: 1306,  # VK лайки (Fast)
-    16: 2544,  # VK просмотры постов
-    17: 2545,  # VK просмотры видео
-    18: 2546,  # VK просмотры клипов
-    19: 2547,  # VK просмотры стены
+    try:
+        payload = {
+            'key': SMM_API_KEY,
+            'action': 'services'
+        }
+        response = requests.post(SMM_API_URL, data=payload, timeout=30)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {'error': f'Ошибка API: {response.status_code}'}
+            
+    except Exception as e:
+        return {'error': str(e), 'status': 'error'}
+
+
+def get_balance():
+    """Проверяет баланс аккаунта в ConfirmSMM"""
+    if not USE_REAL_API or not SMM_API_KEY:
+        return {'balance': '0.00', 'currency': 'USD'}
     
-    # ===== YOUTUBE =====
-    20: 2042,  # YouTube подписчики (Max 30K/Day)
-    21: 2043,  # YouTube подписчики (Max 50K/Day)
-    22: 2044,  # YouTube подписчики (Max 100K/Day)
-    23: 2054,  # YouTube лайки (Max 50K)
-    24: 2055,  # YouTube лайки (Max 100K)
-    25: 2074,  # YouTube просмотры (Social Ads, Min 10K)
-    26: 2076,  # YouTube просмотры (Social Ads, Min 3K)
-    27: 2081,  # YouTube Shorts просмотры (Max 100M)
-    28: 2079,  # YouTube Shorts лайки (Max 50K)
+    try:
+        payload = {
+            'key': SMM_API_KEY,
+            'action': 'balance'
+        }
+        response = requests.post(SMM_API_URL, data=payload, timeout=30)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {'error': f'Ошибка API: {response.status_code}'}
+            
+    except Exception as e:
+        return {'error': str(e), 'status': 'error'}
+
+
+def create_order_api(service_id, link, quantity):
+    """
+    Создаёт заказ на накрутку через API ConfirmSMM
+    """
+    # =========================================================
+    # МАППИНГ УСЛУГ (внутренний ID → внешний ID из API)
+    # =========================================================
+    service_mapping = {
+        1: 2317,   # Telegram подписчики (Ultra Cheap, Instant, No Refill)
+        2: 2406,   # Telegram просмотры (50k/hour)
+        3: 1956,   # VK подписчики (Fast)
+        4: 2042,   # YouTube подписчики (Max 30K, Speed: 30K/Day)
+        5: 1899,   # TikTok подписчики (Max 25K, Quality Accounts)
+    }
     
-    # ===== TIKTOK =====
-    29: 1899,  # TikTok подписчики (Max 25K, Quality)
-    30: 1900,  # TikTok подписчики (Max 50K)
-    31: 1902,  # TikTok подписчики (Max 100K, HQ)
-    32: 1910,  # TikTok лайки (Max 500K, HQ)
-    33: 1911,  # TikTok лайки (Max 500K, Speed 50K/Day)
-    34: 408,   # TikTok просмотры видео (Non-Drop)
-    35: 639,   # TikTok репосты/шары (Max 100M)
-    36: 645,   # TikTok сохранения (Max 100K)
-    37: 1915,  # TikTok Live Stream просмотры (15 мин)
-}
+    external_service_id = service_mapping.get(service_id)
+    if not external_service_id:
+        return {
+            'error': f'Услуга с ID {service_id} не настроена или не найдена в API.',
+            'status': 'error'
+        }
+    
+    if not USE_REAL_API or not SMM_API_KEY:
+        # Имитация для демонстрации
+        import random
+        delay = random.randint(5, 30)
+        success_rate = 0.95
+        if random.random() < success_rate:
+            return {
+                'order_id': f"SIM{random.randint(10000, 99999)}",
+                'status': 'processing',
+                'message': f'Заказ принят в работу (Симуляция).',
+                'simulated': True
+            }
+        else:
+            return {
+                'error': 'Ошибка выполнения заказа (Симуляция)',
+                'status': 'error',
+                'simulated': True
+            }
+    
+    # ===== РЕАЛЬНЫЙ ЗАПРОС =====
+    try:
+        payload = {
+            'key': SMM_API_KEY,
+            'action': 'add',
+            'service': external_service_id,
+            'link': link,
+            'quantity': quantity
+        }
+        
+        logging.info(f"📤 Отправка заказа: service={external_service_id}, quantity={quantity}")
+        response = requests.post(SMM_API_URL, data=payload, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            logging.info(f"📥 Ответ API: {data}")
+            
+            if 'error' in data:
+                return {
+                    'error': data.get('error', 'Неизвестная ошибка'),
+                    'status': 'error'
+                }
+            
+            if data.get('order'):
+                return {
+                    'order_id': data.get('order'),
+                    'status': 'processing',
+                    'message': 'Заказ отправлен на выполнение в ConfirmSMM'
+                }
+            else:
+                return {
+                    'error': 'Не удалось создать заказ',
+                    'status': 'error'
+                }
+        else:
+            return {
+                'error': f'Ошибка API: {response.status_code}',
+                'status': 'error'
+            }
+            
+    except requests.exceptions.Timeout:
+        return {'error': 'Таймаут при соединении с API', 'status': 'error'}
+    except requests.exceptions.ConnectionError:
+        return {'error': 'Не удалось подключиться к API', 'status': 'error'}
+    except Exception as e:
+        logging.error(f"❌ Ошибка: {e}")
+        return {'error': str(e), 'status': 'error'}
+
+
+def check_order_status_api(order_id):
+    """Проверяет статус заказа в ConfirmSMM"""
+    if not USE_REAL_API or not SMM_API_KEY:
+        return {'status': 'done', 'count': 1000, 'message': 'Выполнено (Симуляция)'}
+    
+    try:
+        payload = {
+            'key': SMM_API_KEY,
+            'action': 'status',
+            'order': order_id
+        }
+        response = requests.post(SMM_API_URL, data=payload, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            status_map = {
+                'In progress': 'processing',
+                'Partial': 'processing',
+                'Completed': 'done',
+                'Cancelled': 'cancelled',
+                'Error': 'error'
+            }
+            
+            smm_status = data.get('status', 'unknown')
+            our_status = status_map.get(smm_status, 'pending')
+            
+            return {
+                'status': our_status,
+                'count': data.get('start_count', 0),
+                'message': data.get('status', '')
+            }
+        else:
+            return {'error': f'Ошибка API: {response.status_code}'}
+            
+    except Exception as e:
+        return {'error': str(e)}
+
+
+def cancel_order_api(order_id):
+    """Отменяет заказ в ConfirmSMM"""
+    if not USE_REAL_API or not SMM_API_KEY:
+        return {'status': 'cancelled', 'message': 'Заказ отменён (симуляция)'}
+    
+    try:
+        payload = {
+            'key': SMM_API_KEY,
+            'action': 'cancel',
+            'orders': order_id
+        }
+        response = requests.post(SMM_API_URL, data=payload, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if isinstance(data, list) and len(data) > 0:
+                result = data[0]
+                if result.get('cancel') == 1:
+                    return {'status': 'cancelled', 'message': 'Заказ отменён'}
+                else:
+                    return {'error': result.get('cancel', {}).get('error', 'Ошибка отмены')}
+            return {'status': 'cancelled', 'message': 'Заказ отменён'}
+        else:
+            return {'error': f'Ошибка API: {response.status_code}'}
+            
+    except Exception as e:
+        return {'error': str(e)}
