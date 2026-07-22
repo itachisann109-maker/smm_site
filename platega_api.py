@@ -19,24 +19,30 @@ def create_payment(amount, description, order_id, user_email, user_username):
     Создаёт платёж через Platega
     POST /v2/transaction/process
     """
-    if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
-        return {'error': 'Platega не настроен (нет Merchant ID или Secret Key)', 'status': 'error'}
+    # Проверка настроек
+    if not PLATEGA_MERCHANT_ID:
+        return {'error': 'Platega не настроен: отсутствует Merchant ID', 'status': 'error'}
+    if not PLATEGA_SECRET_KEY:
+        return {'error': 'Platega не настроен: отсутствует Secret Key', 'status': 'error'}
     
-    # ⚠️ ПРИНУДИТЕЛЬНО ЗАДАЁМ ОПИСАНИЕ (ВРЕМЕННО!)
+    # ПРИНУДИТЕЛЬНО УСТАНАВЛИВАЕМ ОПИСАНИЕ
     description = "Пополнение баланса SOCHYPER"
     
     try:
+        # ✅ ПРАВИЛЬНЫЙ ЭНДПОИНТ ИЗ ДОКУМЕНТАЦИИ
         url = f"{PLATEGA_API_URL}/v2/transaction/process"
         
-        # ⚠️ Сумма в КОПЕЙКАХ
+        # Сумма в КОПЕЙКАХ
         amount_in_cents = int(amount * 100)
         
-        # 🔍 Отладка
+        # Отладка
         print("=" * 50)
         print("🔍 ПАРАМЕТРЫ create_payment:")
         print(f"amount: {amount} ({amount_in_cents} копеек)")
         print(f"description: '{description}'")
         print(f"order_id: {order_id}")
+        print(f"Merchant ID: {PLATEGA_MERCHANT_ID}")
+        print(f"API URL: {PLATEGA_API_URL}")
         print("=" * 50)
         
         payload = {
@@ -60,7 +66,6 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        # Отладка запроса
         print("=" * 50)
         print("📤 ЗАПРОС К PLATEGA")
         print(f"URL: {url}")
@@ -98,11 +103,9 @@ def create_payment(amount, description, order_id, user_email, user_username):
 
 
 def check_payment_status(payment_id):
-    """
-    Проверяет статус платежа
-    """
+    """Проверяет статус платежа"""
     if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
-        return {'error': 'Platega не настроен (нет Merchant ID или Secret Key)', 'status': 'error'}
+        return {'error': 'Platega не настроен', 'status': 'error'}
     
     try:
         url = f"{PLATEGA_API_URL}/v2/transaction/status"
@@ -117,12 +120,7 @@ def check_payment_status(payment_id):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        logging.info(f"📤 Запрос статуса: {json.dumps(payload, indent=2)}")
-        
         response = requests.post(url, json=payload, headers=headers, timeout=30)
-        
-        logging.info(f"📥 Ответ статуса: {response.status_code}")
-        logging.info(f"📥 Тело: {response.text}")
         
         if response.status_code == 200:
             data = response.json()
@@ -138,14 +136,11 @@ def check_payment_status(payment_id):
             }
             
     except Exception as e:
-        logging.error(f"❌ Ошибка проверки статуса: {e}")
         return {'error': str(e), 'status': 'error'}
 
 
 def cancel_payment(order_id):
-    """
-    Отменяет платёж (если нужно)
-    """
+    """Отменяет платёж"""
     if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
         return {'error': 'Platega не настроен', 'status': 'error'}
     
