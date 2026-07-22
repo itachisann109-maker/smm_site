@@ -17,25 +17,27 @@ logging.basicConfig(level=logging.INFO)
 def create_payment(amount, description, order_id, user_email, user_username):
     """
     Создаёт платёж через Platega
-    Метод: Создание платежной ссылки без заданного метода
+    POST /v2/transaction/process
     """
     if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
         return {'error': 'Platega не настроен (нет Merchant ID или Secret Key)', 'status': 'error'}
     
     try:
-        url = f"{PLATEGA_API_URL}/payments/create"
+        url = f"{PLATEGA_API_URL}/v2/transaction/process"
         
         payload = {
-            'merchant_id': PLATEGA_MERCHANT_ID,
-            'amount': amount,
-            'currency': 'RUB',
-            'description': description,
-            'order_id': str(order_id),
-            'customer_email': user_email,
-            'customer_username': user_username,
-            'success_url': 'https://sochyper.ru/payment/success',
-            'fail_url': 'https://sochyper.ru/payment/fail',
-            'webhook_url': 'https://sochyper.ru/webhook/platega'
+            "paymentDetails": {
+                "amount": amount,
+                "currency": "RUB",
+                "description": description,
+                "return": "https://sochyper.ru/payment/success",
+                "failedUrl": "https://sochyper.ru/payment/fail",
+                "payload": str(order_id)
+            },
+            "metadata": {
+                "userid": str(order_id),
+                "userName": user_username
+            }
         }
         
         headers = {
@@ -44,19 +46,20 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        logging.info(f"📤 Отправка запроса в Platega: {url}")
-        logging.info(f"📤 Данные: {payload}")
+        logging.info(f"📤 Запрос в Platega: {url}")
+        logging.info(f"📤 Данные: {json.dumps(payload, indent=2)}")
         
         response = requests.post(url, json=payload, headers=headers, timeout=30)
         
-        logging.info(f"📥 Ответ Platega: {response.status_code} - {response.text}")
+        logging.info(f"📥 Ответ: {response.status_code}")
+        logging.info(f"📥 Тело: {response.text}")
         
         if response.status_code == 200:
             data = response.json()
-            if data.get('status') == 'success' or data.get('payment_url'):
+            if data.get('url'):
                 return {
-                    'payment_url': data.get('payment_url'),
-                    'payment_id': data.get('payment_id', data.get('id')),
+                    'payment_url': data.get('url'),
+                    'payment_id': data.get('transactionId'),
                     'status': 'success'
                 }
             else:
@@ -69,7 +72,7 @@ def create_payment(amount, description, order_id, user_email, user_username):
             }
             
     except Exception as e:
-        logging.error(f"❌ Ошибка создания платежа: {e}")
+        logging.error(f"❌ Ошибка: {e}")
         return {'error': str(e), 'status': 'error'}
 
 
@@ -79,11 +82,11 @@ def check_payment_status(payment_id):
         return {'error': 'Platega не настроен', 'status': 'error'}
     
     try:
-        url = f"{PLATEGA_API_URL}/payments/status"
+        # Проверьте в документации правильный путь для статуса
+        url = f"{PLATEGA_API_URL}/v2/transaction/status"
         
         payload = {
-            'merchant_id': PLATEGA_MERCHANT_ID,
-            'payment_id': payment_id
+            'transactionId': payment_id
         }
         
         headers = {
