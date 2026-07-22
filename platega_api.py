@@ -25,24 +25,25 @@ def create_payment(amount, description, order_id, user_email, user_username):
     try:
         url = f"{PLATEGA_API_URL}/v2/transaction/process"
         
-        # ⚠️ ВАЖНО: сумма в КОПЕЙКАХ!
+        # ⚠️ Сумма в КОПЕЙКАХ
         amount_in_cents = int(amount * 100)
         
-        # Убеждаемся, что описание не пустое
-        description = description or "Пополнение баланса SOCHYPER"
+        # ⚠️ ОПИСАНИЕ НЕ ДОЛЖНО БЫТЬ ПУСТЫМ!
+        if not description or description.strip() == '':
+            description = "Пополнение баланса SOCHYPER"
         
         payload = {
             "paymentDetails": {
-                "amount": amount_in_cents,           # ✅ integer (копейки)
-                "currency": "RUB",                   # ✅ string
-                "description": description,          # ✅ string
-                "return": "https://sochyper.ru/payment/success",  # ✅ полный URL
-                "failedUrl": "https://sochyper.ru/payment/fail",  # ✅ полный URL
-                "payload": str(order_id)             # ✅ строка
+                "amount": amount_in_cents,
+                "currency": "RUB",
+                "description": description,  # ✅ теперь точно не пустое
+                "return": "https://sochyper.ru/payment/success",
+                "failedUrl": "https://sochyper.ru/payment/fail",
+                "payload": str(order_id)
             },
             "metadata": {
-                "userid": str(order_id),             # ✅ строка
-                "userName": user_username or "User"  # ✅ строка
+                "userid": str(order_id),
+                "userName": user_username or "User"
             }
         }
         
@@ -52,12 +53,11 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        # Детальный вывод для отладки
+        # Отладка
         print("=" * 50)
         print("📤 ЗАПРОС К PLATEGA")
         print(f"URL: {url}")
-        print(f"PAYLOAD: {json.dumps(payload, indent=2)}")
-        print(f"HEADERS: {headers}")
+        print(f"PAYLOAD: {json.dumps(payload, indent=2, ensure_ascii=False)}")
         print("=" * 50)
         
         response = requests.post(url, json=payload, headers=headers, timeout=30)
@@ -79,7 +79,6 @@ def create_payment(amount, description, order_id, user_email, user_username):
             else:
                 return {'error': data.get('message', 'Неизвестная ошибка'), 'status': 'error'}
         else:
-            # Возвращаем полный ответ для отладки
             return {
                 'error': f'Ошибка API: {response.status_code} - {response.text}',
                 'status': 'error',
