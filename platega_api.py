@@ -1,9 +1,7 @@
 import requests
 import os
 import json
-import hashlib
-import hmac
-import time
+import logging
 
 # ========================================================
 # НАСТРОЙКИ PLATEGA
@@ -11,18 +9,22 @@ import time
 
 PLATEGA_MERCHANT_ID = os.environ.get('PLATEGA_MERCHANT_ID', '')
 PLATEGA_SECRET_KEY = os.environ.get('PLATEGA_SECRET_KEY', '')
-PLATEGA_PUBLIC_KEY = os.environ.get('PLATEGA_PUBLIC_KEY', '')
-PLATEGA_API_URL = os.environ.get('PLATEGA_API_URL', 'https://app.platega.io/api/v1')
+PLATEGA_API_URL = os.environ.get('PLATEGA_API_URL', 'https://app.platega.io')
+
+logging.basicConfig(level=logging.INFO)
 
 
 def create_payment(amount, description, order_id, user_email, user_username):
     """
     Создаёт платёж через Platega
+    Метод: Создание платежной ссылки без заданного метода
     """
     if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
-        return {'error': 'Platega не настроен', 'status': 'error'}
+        return {'error': 'Platega не настроен (нет Merchant ID или Secret Key)', 'status': 'error'}
     
     try:
+        url = f"{PLATEGA_API_URL}/payments/create"
+        
         payload = {
             'merchant_id': PLATEGA_MERCHANT_ID,
             'amount': amount,
@@ -36,50 +38,39 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'webhook_url': 'https://sochyper.ru/webhook/platega'
         }
         
-        # Подпись запроса
-        signature = generate_signature(payload)
         headers = {
             'Content-Type': 'application/json',
-            'X-Signature': signature
+            'X-MerchantId': PLATEGA_MERCHANT_ID,
+            'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        response = requests.post(
-            f"{PLATEGA_API_URL}/payments/create",
-            json=payload,
-            headers=headers,
-            timeout=30
-        )
+        logging.info(f"📤 Отправка запроса в Platega: {url}")
+        logging.info(f"📤 Данные: {payload}")
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        
+        logging.info(f"📥 Ответ Platega: {response.status_code} - {response.text}")
         
         if response.status_code == 200:
             data = response.json()
-            if data.get('status') == 'success':
+            if data.get('status') == 'success' or data.get('payment_url'):
                 return {
                     'payment_url': data.get('payment_url'),
-                    'payment_id': data.get('payment_id'),
+                    'payment_id': data.get('payment_id', data.get('id')),
                     'status': 'success'
                 }
             else:
                 return {'error': data.get('message', 'Неизвестная ошибка'), 'status': 'error'}
         else:
-            return {'error': f'Ошибка API: {response.status_code}', 'status': 'error'}
+            return {
+                'error': f'Ошибка API: {response.status_code}',
+                'status': 'error',
+                'response': response.text
+            }
             
     except Exception as e:
+        logging.error(f"❌ Ошибка создания платежа: {e}")
         return {'error': str(e), 'status': 'error'}
-
-
-def generate_signature(payload):
-    """Генерирует подпись для запроса"""
-    # Сортируем ключи
-    sorted_payload = {k: v for k, v in sorted(payload.items())}
-    # Преобразуем в строку
-    payload_str = json.dumps(sorted_payload, separators=(',', ':'))
-    # Создаём подпись
-    signature = hmac.new(
-        PLATEGA_SECRET_KEY.encode('utf-8'),
-        payload_str.encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-    return signature
 
 
 def check_payment_status(payment_id):
@@ -88,23 +79,20 @@ def check_payment_status(payment_id):
         return {'error': 'Platega не настроен', 'status': 'error'}
     
     try:
+        url = f"{PLATEGA_API_URL}/payments/status"
+        
         payload = {
             'merchant_id': PLATEGA_MERCHANT_ID,
             'payment_id': payment_id
         }
         
-        signature = generate_signature(payload)
         headers = {
             'Content-Type': 'application/json',
-            'X-Signature': signature
+            'X-MerchantId': PLATEGA_MERCHANT_ID,
+            'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        response = requests.post(
-            f"{PLATEGA_API_URL}/payments/status",
-            json=payload,
-            headers=headers,
-            timeout=30
-        )
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
         
         if response.status_code == 200:
             data = response.json()
