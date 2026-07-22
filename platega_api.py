@@ -25,9 +25,12 @@ def create_payment(amount, description, order_id, user_email, user_username):
     try:
         url = f"{PLATEGA_API_URL}/v2/transaction/process"
         
+        # ⚠️ ВАЖНО: сумма в КОПЕЙКАХ!
+        amount_in_cents = int(amount * 100)
+        
         payload = {
             "paymentDetails": {
-                "amount": amount,
+                "amount": amount_in_cents,
                 "currency": "RUB",
                 "description": description,
                 "return": "https://sochyper.ru/payment/success",
@@ -46,8 +49,7 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        logging.info(f"📤 Запрос в Platega: {url}")
-        logging.info(f"📤 Данные: {json.dumps(payload, indent=2)}")
+        logging.info(f"📤 Запрос в Platega: {json.dumps(payload, indent=2)}")
         
         response = requests.post(url, json=payload, headers=headers, timeout=30)
         
@@ -65,21 +67,31 @@ def create_payment(amount, description, order_id, user_email, user_username):
             else:
                 return {'error': data.get('message', 'Неизвестная ошибка'), 'status': 'error'}
         else:
+            # Показываем полную ошибку от Platega
+            error_detail = response.text
+            try:
+                error_data = response.json()
+                error_detail = error_data.get('message', error_detail)
+            except:
+                pass
+            
             return {
-                'error': f'Ошибка API: {response.status_code}',
+                'error': f'Ошибка API: {response.status_code} - {error_detail}',
                 'status': 'error',
                 'response': response.text
             }
             
     except Exception as e:
-        logging.error(f"❌ Ошибка: {e}")
+        logging.error(f"❌ Ошибка создания платежа: {e}")
         return {'error': str(e), 'status': 'error'}
 
 
 def check_payment_status(payment_id):
-    """Проверяет статус платежа"""
+    """
+    Проверяет статус платежа
+    """
     if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
-        return {'error': 'Platega не настроен', 'status': 'error'}
+        return {'error': 'Platega не настроен (нет Merchant ID или Secret Key)', 'status': 'error'}
     
     try:
         # Проверьте в документации правильный путь для статуса
@@ -95,7 +107,12 @@ def check_payment_status(payment_id):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
+        logging.info(f"📤 Запрос статуса: {json.dumps(payload, indent=2)}")
+        
         response = requests.post(url, json=payload, headers=headers, timeout=30)
+        
+        logging.info(f"📥 Ответ статуса: {response.status_code}")
+        logging.info(f"📥 Тело: {response.text}")
         
         if response.status_code == 200:
             data = response.json()
@@ -105,7 +122,57 @@ def check_payment_status(payment_id):
                 'message': data.get('message', '')
             }
         else:
-            return {'error': f'Ошибка API: {response.status_code}', 'status': 'error'}
+            error_detail = response.text
+            try:
+                error_data = response.json()
+                error_detail = error_data.get('message', error_detail)
+            except:
+                pass
+            
+            return {
+                'error': f'Ошибка API: {response.status_code} - {error_detail}',
+                'status': 'error'
+            }
+            
+    except Exception as e:
+        logging.error(f"❌ Ошибка проверки статуса: {e}")
+        return {'error': str(e), 'status': 'error'}
+
+
+def cancel_payment(order_id):
+    """
+    Отменяет платёж (если нужно)
+    """
+    if not PLATEGA_MERCHANT_ID or not PLATEGA_SECRET_KEY:
+        return {'error': 'Platega не настроен', 'status': 'error'}
+    
+    try:
+        # Проверьте в документации правильный путь для отмены
+        url = f"{PLATEGA_API_URL}/v2/transaction/cancel"
+        
+        payload = {
+            'order_id': str(order_id)
+        }
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'X-MerchantId': PLATEGA_MERCHANT_ID,
+            'X-Secret': PLATEGA_SECRET_KEY
+        }
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'status': 'success',
+                'message': data.get('message', 'Платёж отменён')
+            }
+        else:
+            return {
+                'error': f'Ошибка API: {response.status_code}',
+                'status': 'error'
+            }
             
     except Exception as e:
         return {'error': str(e), 'status': 'error'}
