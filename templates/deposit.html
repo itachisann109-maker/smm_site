@@ -34,28 +34,41 @@
             <div class="mb-4">
                 <label class="form-label fw-semibold" style="color: var(--text-primary);">Способы оплаты</label>
                 <div class="payment-methods">
+                    <!-- Platega -->
                     <div class="payment-option">
-                        <input type="radio" name="payment_method" value="sbp" id="sbp" checked>
+                        <input type="radio" name="payment_method" value="platega" id="platega" checked>
+                        <label for="platega" class="payment-label">
+                            <i class="fas fa-credit-card me-2"></i>
+                            <span>Банковская карта (Platega)</span>
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" name="payment_method" value="sbp" id="sbp">
                         <label for="sbp" class="payment-label">
                             <i class="fas fa-qrcode me-2"></i>
                             <span>СБП (любой банк РФ)</span>
                         </label>
                     </div>
-                    <div class="payment-option">
-                        <input type="radio" name="payment_method" value="card" id="card">
-                        <label for="card" class="payment-label">
-                            <i class="fas fa-credit-card me-2"></i>
-                            <span>Банковская карта</span>
-                        </label>
-                    </div>
                 </div>
             </div>
 
-            <button class="btn btn-success w-100" id="depositBtn" style="font-weight: 600; padding: 12px; background: var(--btn-dark-bg); color: var(--btn-dark-text); border: none; border-radius: 10px;">
-                <i class="fas fa-check-circle me-2"></i>Пополнить
-            </button>
+            <!-- Кнопка оплаты через Platega -->
+            <form method="POST" action="{{ url_for('payment_platega') }}" id="plategaForm">
+                <input type="hidden" name="amount" id="plategaAmount" value="">
+                <button type="submit" class="btn btn-success w-100" id="depositBtn" style="font-weight: 600; padding: 12px; background: var(--btn-dark-bg); color: var(--btn-dark-text); border: none; border-radius: 10px;">
+                    <i class="fas fa-check-circle me-2"></i>Оплатить через Platega
+                </button>
+            </form>
 
-            <p class="text-center text-muted mt-3 small">В демо-режиме баланс пополняется мгновенно</p>
+            <!-- Кнопка оплаты через СБП (демо) -->
+            <form method="POST" action="{{ url_for('deposit') }}" id="sbpForm" style="display: none;">
+                <input type="hidden" name="amount" id="sbpAmount" value="">
+                <button type="submit" class="btn btn-success w-100" id="sbpBtn" style="font-weight: 600; padding: 12px; background: var(--btn-dark-bg); color: var(--btn-dark-text); border: none; border-radius: 10px;">
+                    <i class="fas fa-check-circle me-2"></i>Пополнить (СБП — демо)
+                </button>
+            </form>
+
+            <p class="text-center text-muted mt-3 small">🔒 Безопасная оплата через Platega</p>
         </div>
 
         <div class="text-center mt-3">
@@ -68,8 +81,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     const amountBtns = document.querySelectorAll('.amount-btn');
     const amountInput = document.getElementById('amountInput');
-    const depositBtn = document.getElementById('depositBtn');
     const amountWarning = document.getElementById('amountWarning');
+    const plategaForm = document.getElementById('plategaForm');
+    const sbpForm = document.getElementById('sbpForm');
+    const plategaAmount = document.getElementById('plategaAmount');
+    const sbpAmount = document.getElementById('sbpAmount');
+    const depositBtn = document.getElementById('depositBtn');
+    const sbpBtn = document.getElementById('sbpBtn');
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
 
     // Кнопки-суммы
     amountBtns.forEach(function(btn) {
@@ -92,52 +111,70 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Отправка формы
-    depositBtn.addEventListener('click', function() {
+    // Переключение между способами оплаты
+    paymentMethods.forEach(function(method) {
+        method.addEventListener('change', function() {
+            if (this.value === 'platega') {
+                plategaForm.style.display = 'block';
+                sbpForm.style.display = 'none';
+            } else {
+                plategaForm.style.display = 'none';
+                sbpForm.style.display = 'block';
+            }
+        });
+    });
+
+    // Отправка через Platega
+    plategaForm.addEventListener('submit', function(e) {
         const amount = parseFloat(amountInput.value);
         
         if (!amount || amount <= 0) {
+            e.preventDefault();
             alert('❌ Пожалуйста, введите сумму пополнения');
             amountInput.focus();
-            return;
+            return false;
         }
         
         if (amount < 500) {
+            e.preventDefault();
             alert('❌ Минимальная сумма пополнения — 500 ₽');
             amountInput.focus();
-            return;
+            return false;
         }
 
-        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
-        if (!selectedMethod) {
-            alert('❌ Пожалуйста, выберите способ оплаты');
-            return;
+        plategaAmount.value = amount;
+    });
+
+    // Отправка через СБП (демо)
+    sbpForm.addEventListener('submit', function(e) {
+        const amount = parseFloat(amountInput.value);
+        
+        if (!amount || amount <= 0) {
+            e.preventDefault();
+            alert('❌ Пожалуйста, введите сумму пополнения');
+            amountInput.focus();
+            return false;
+        }
+        
+        if (amount < 500) {
+            e.preventDefault();
+            alert('❌ Минимальная сумма пополнения — 500 ₽');
+            amountInput.focus();
+            return false;
         }
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = "{{ url_for('deposit') }}";
-
-        const amountField = document.createElement('input');
-        amountField.type = 'hidden';
-        amountField.name = 'amount';
-        amountField.value = amount;
-        form.appendChild(amountField);
-
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = 'payment_method';
-        methodField.value = selectedMethod.value;
-        form.appendChild(methodField);
-
-        document.body.appendChild(form);
-        form.submit();
+        sbpAmount.value = amount;
     });
 
     // Enter в поле суммы
     amountInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            depositBtn.click();
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (selectedMethod && selectedMethod.value === 'platega') {
+                plategaForm.dispatchEvent(new Event('submit'));
+            } else {
+                sbpForm.dispatchEvent(new Event('submit'));
+            }
         }
     });
 });

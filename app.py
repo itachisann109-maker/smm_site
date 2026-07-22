@@ -53,6 +53,7 @@ db = SQLAlchemy(app)
 
 # ===== ИМПОРТ SMM-API =====
 from smm_api import create_order_api, check_order_status_api, cancel_order_api, USE_REAL_API, get_balance, get_services
+from platega_api import create_payment, check_payment_status
 
 
 # ========================================================
@@ -359,7 +360,6 @@ def start_background_thread():
     thread.start()
     print("🔄 Фоновый процесс обновления статусов запущен")
 
-# Запускаем поток при старте приложения (для gunicorn)
 start_background_thread()
 
 
@@ -369,13 +369,11 @@ start_background_thread()
 
 @app.route('/health')
 def health_check():
-    """Проверка здоровья приложения"""
     return 'OK', 200
 
 
 @app.route('/healthz')
 def healthz():
-    """Альтернативный health check"""
     return 'OK', 200
 
 
@@ -588,7 +586,7 @@ def order(service_id):
     if request.method == 'POST':
         link = request.form.get('link')
         quantity = int(request.form.get('quantity'))
-        total = round(service.price * quantity, 2)
+        total = round(service.price * quantity, 2)  # Цена за 1 единицу
         
         if user.balance < total:
             flash('Недостаточно средств. Пополните баланс.', 'danger')
@@ -694,6 +692,10 @@ def deposit():
     
     if request.method == 'POST':
         amount = float(request.form.get('amount'))
+        if amount < 500:
+            flash('❌ Минимальная сумма пополнения — 500 ₽', 'danger')
+            return redirect(url_for('deposit'))
+        
         user.balance += amount
         db.session.commit()
         
@@ -728,6 +730,10 @@ def payment_page():
             flash('Пожалуйста, войдите в систему', 'warning')
             return redirect(url_for('login'))
         
+        if amount < 500:
+            flash('❌ Минимальная сумма пополнения — 500 ₽', 'danger')
+            return redirect(url_for('deposit'))
+        
         if amount > 0:
             user.balance += amount
             db.session.commit()
@@ -740,6 +746,91 @@ def payment_page():
     amount = request.args.get('amount', '0')
     method = request.args.get('method', 'sbp')
     return render_template('payment.html', amount=amount, method=method, grouped_services=grouped_services)
+
+
+# ========================================================
+# ПЛАТЁЖНЫЕ МАРШРУТЫ (Platega)
+# ========================================================
+
+@app.route('/payment/platega', methods=['POST'])
+def payment_platega():
+    """Создаёт платёж через Platega"""
+    user = get_current_user()
+    if not user:
+        flash('Пожалуйста, войдите в систему', 'warning')
+        return redirect(url_for('login'))
+    
+    amount = float(request.form.get('amount', 0))
+    if amount < 500:
+        flash('❌ Минимальная сумма пополнения — 500 ₽', 'danger')
+        return redirect(url_for('deposit'))
+    
+    # Создаём платёж
+    result = create_payment(
+        amount=amount,
+        description=f"Пополнение баланса SOCHYPER",
+        order_id=user.id,
+        user_email=user.email or 'user@sochyper.ru',
+        user_username=user.username
+    )
+    
+    if result.get('status') == 'success':
+        session['payment_id'] = result.get('payment_id')
+        return redirect(result.get('payment_url'))
+    else:
+        flash(f'❌ Ошибка создания платежа: {result.get("error")}', 'danger')
+        return redirect(url_for('deposit'))
+
+
+@app.route('/payment/success')
+def payment_success():
+    """Страница успешной оплаты"""
+    user = get_current_user()
+    payment_id = session.get('payment_id')
+    
+    if payment_id:
+        status = check_payment_status(payment_id)
+        if status.get('status') == 'completed':
+            amount = status.get('amount')
+            if amount and user:
+                user.balance += amount
+                db.session.commit()
+                flash(f'✅ Баланс пополнен на {amount} ₽!', 'success')
+    
+    return render_template('payment_success.html', user=user)
+
+
+@app.route('/payment/fail')
+def payment_fail():
+    """Страница неудачной оплаты"""
+    user = get_current_user()
+    flash('❌ Оплата не прошла. Попробуйте снова.', 'danger')
+    return render_template('payment_fail.html', user=user)
+
+
+@app.route('/webhook/platega', methods=['POST'])
+def webhook_platega():
+    """Webhook для обработки уведомлений от Platega"""
+    data = request.json
+    print(f"📥 Webhook Platega: {data}")
+    
+    if data.get('event') == 'payment.completed':
+        payment_id = data.get('payment_id')
+        amount = float(data.get('amount', 0))
+        user_id = data.get('order_id')
+        
+        if user_id:
+            user = User.query.get(int(user_id))
+            if user:
+                user.balance += amount
+                db.session.commit()
+                print(f"✅ Платёж {payment_id} обработан. Баланс пользователя {user_id} пополнен на {amount} ₽")
+            else:
+                print(f"⚠️ Пользователь {user_id} не найден")
+        else:
+            print(f"⚠️ order_id не передан в webhook")
+    
+    return 'OK', 200
 
 
 # ========================================================
