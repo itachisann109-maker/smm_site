@@ -12,7 +12,7 @@ import time
 PLATEGA_MERCHANT_ID = os.environ.get('PLATEGA_MERCHANT_ID', '')
 PLATEGA_SECRET_KEY = os.environ.get('PLATEGA_SECRET_KEY', '')
 PLATEGA_PUBLIC_KEY = os.environ.get('PLATEGA_PUBLIC_KEY', '')
-PLATEGA_API_URL = os.environ.get('PLATEGA_API_URL', 'https://api.platega.io/v1')
+PLATEGA_API_URL = os.environ.get('PLATEGA_API_URL', 'https://app.platega.io/api/v1')
 
 
 def create_payment(amount, description, order_id, user_email, user_username):
