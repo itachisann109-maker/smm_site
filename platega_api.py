@@ -28,18 +28,21 @@ def create_payment(amount, description, order_id, user_email, user_username):
         # ⚠️ ВАЖНО: сумма в КОПЕЙКАХ!
         amount_in_cents = int(amount * 100)
         
+        # Убеждаемся, что описание не пустое
+        description = description or "Пополнение баланса SOCHYPER"
+        
         payload = {
             "paymentDetails": {
-                "amount": amount_in_cents,
-                "currency": "RUB",
-                "description": description,
-                "return": "https://sochyper.ru/payment/success",
-                "failedUrl": "https://sochyper.ru/payment/fail",
-                "payload": str(order_id)
+                "amount": amount_in_cents,           # ✅ integer (копейки)
+                "currency": "RUB",                   # ✅ string
+                "description": description,          # ✅ string
+                "return": "https://sochyper.ru/payment/success",  # ✅ полный URL
+                "failedUrl": "https://sochyper.ru/payment/fail",  # ✅ полный URL
+                "payload": str(order_id)             # ✅ строка
             },
             "metadata": {
-                "userid": str(order_id),
-                "userName": user_username
+                "userid": str(order_id),             # ✅ строка
+                "userName": user_username or "User"  # ✅ строка
             }
         }
         
@@ -49,12 +52,21 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        logging.info(f"📤 Запрос в Platega: {json.dumps(payload, indent=2)}")
+        # Детальный вывод для отладки
+        print("=" * 50)
+        print("📤 ЗАПРОС К PLATEGA")
+        print(f"URL: {url}")
+        print(f"PAYLOAD: {json.dumps(payload, indent=2)}")
+        print(f"HEADERS: {headers}")
+        print("=" * 50)
         
         response = requests.post(url, json=payload, headers=headers, timeout=30)
         
-        logging.info(f"📥 Ответ: {response.status_code}")
-        logging.info(f"📥 Тело: {response.text}")
+        print("=" * 50)
+        print("📥 ОТВЕТ ОТ PLATEGA")
+        print(f"STATUS: {response.status_code}")
+        print(f"TEXT: {response.text}")
+        print("=" * 50)
         
         if response.status_code == 200:
             data = response.json()
@@ -67,22 +79,15 @@ def create_payment(amount, description, order_id, user_email, user_username):
             else:
                 return {'error': data.get('message', 'Неизвестная ошибка'), 'status': 'error'}
         else:
-            # Показываем полную ошибку от Platega
-            error_detail = response.text
-            try:
-                error_data = response.json()
-                error_detail = error_data.get('message', error_detail)
-            except:
-                pass
-            
+            # Возвращаем полный ответ для отладки
             return {
-                'error': f'Ошибка API: {response.status_code} - {error_detail}',
+                'error': f'Ошибка API: {response.status_code} - {response.text}',
                 'status': 'error',
                 'response': response.text
             }
             
     except Exception as e:
-        logging.error(f"❌ Ошибка создания платежа: {e}")
+        print(f"❌ ИСКЛЮЧЕНИЕ: {e}")
         return {'error': str(e), 'status': 'error'}
 
 
@@ -122,15 +127,8 @@ def check_payment_status(payment_id):
                 'message': data.get('message', '')
             }
         else:
-            error_detail = response.text
-            try:
-                error_data = response.json()
-                error_detail = error_data.get('message', error_detail)
-            except:
-                pass
-            
             return {
-                'error': f'Ошибка API: {response.status_code} - {error_detail}',
+                'error': f'Ошибка API: {response.status_code} - {response.text}',
                 'status': 'error'
             }
             
