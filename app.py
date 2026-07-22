@@ -834,6 +834,42 @@ def webhook_platega():
 
 
 # ========================================================
+# ТЕСТОВЫЙ МАРШРУТ ДЛЯ PLATEGA
+# ========================================================
+
+@app.route('/test-platega')
+def test_platega():
+    """Тестовый маршрут для проверки интеграции с Platega"""
+    from platega_api import create_payment
+    user = get_current_user()
+    
+    if not user:
+        return "❌ Войдите в систему. <a href='/login'>Войти</a>"
+    
+    result = create_payment(
+        amount=500,
+        description="Тестовый платёж SOCHYPER",
+        order_id=user.id,
+        user_email=user.email or 'test@sochyper.ru',
+        user_username=user.username
+    )
+    
+    if result.get('status') == 'success':
+        return f"""
+        <h2>✅ Платёж создан</h2>
+        <p>Payment ID: {result.get('payment_id')}</p>
+        <p><a href="{result.get('payment_url')}" target="_blank">Перейти к оплате</a></p>
+        <p><a href="/">На главную</a></p>
+        """
+    else:
+        return f"""
+        <h2>❌ Ошибка создания платежа</h2>
+        <p>Ошибка: {result.get('error')}</p>
+        <p><a href="/deposit">Вернуться к пополнению</a></p>
+        """
+
+
+# ========================================================
 # ОБРАБОТЧИК ОШИБОК 404
 # ========================================================
 
