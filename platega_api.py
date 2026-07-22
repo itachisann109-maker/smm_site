@@ -25,11 +25,14 @@ def create_payment(amount, description, order_id, user_email, user_username):
     if not PLATEGA_SECRET_KEY:
         return {'error': 'Platega не настроен: отсутствует Secret Key', 'status': 'error'}
     
-    # ПРИНУДИТЕЛЬНО УСТАНАВЛИВАЕМ ОПИСАНИЕ
+    # ⚠️ ЖЁСТКАЯ ЗАГЛУШКА
     description = "Пополнение баланса SOCHYPER"
     
+    # ⚠️ ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА (на случай, если description всё равно None)
+    if description is None or description.strip() == '':
+        description = "Пополнение баланса SOCHYPER"
+    
     try:
-        # ✅ ПРАВИЛЬНЫЙ ЭНДПОИНТ ИЗ ДОКУМЕНТАЦИИ
         url = f"{PLATEGA_API_URL}/v2/transaction/process"
         
         # Сумма в КОПЕЙКАХ
@@ -39,7 +42,7 @@ def create_payment(amount, description, order_id, user_email, user_username):
         print("=" * 50)
         print("🔍 ПАРАМЕТРЫ create_payment:")
         print(f"amount: {amount} ({amount_in_cents} копеек)")
-        print(f"description: '{description}'")
+        print(f"description: '{description}' (len: {len(description)})")
         print(f"order_id: {order_id}")
         print(f"Merchant ID: {PLATEGA_MERCHANT_ID}")
         print(f"API URL: {PLATEGA_API_URL}")
