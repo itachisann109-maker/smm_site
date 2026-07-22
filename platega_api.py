@@ -28,15 +28,23 @@ def create_payment(amount, description, order_id, user_email, user_username):
         # ⚠️ Сумма в КОПЕЙКАХ
         amount_in_cents = int(amount * 100)
         
-        # ⚠️ ОПИСАНИЕ НЕ ДОЛЖНО БЫТЬ ПУСТЫМ!
-        if not description or description.strip() == '':
+        # ⚠️ ПРИНУДИТЕЛЬНО проверяем описание
+        if description is None or description == '' or description.strip() == '':
             description = "Пополнение баланса SOCHYPER"
+        
+        # 🔍 Отладка
+        print("=" * 50)
+        print("🔍 ПАРАМЕТРЫ create_payment:")
+        print(f"amount: {amount}")
+        print(f"description: '{description}'")
+        print(f"order_id: {order_id}")
+        print("=" * 50)
         
         payload = {
             "paymentDetails": {
                 "amount": amount_in_cents,
                 "currency": "RUB",
-                "description": description,  # ✅ теперь точно не пустое
+                "description": description,
                 "return": "https://sochyper.ru/payment/success",
                 "failedUrl": "https://sochyper.ru/payment/fail",
                 "payload": str(order_id)
@@ -53,7 +61,7 @@ def create_payment(amount, description, order_id, user_email, user_username):
             'X-Secret': PLATEGA_SECRET_KEY
         }
         
-        # Отладка
+        # Отладка запроса
         print("=" * 50)
         print("📤 ЗАПРОС К PLATEGA")
         print(f"URL: {url}")
@@ -98,7 +106,6 @@ def check_payment_status(payment_id):
         return {'error': 'Platega не настроен (нет Merchant ID или Secret Key)', 'status': 'error'}
     
     try:
-        # Проверьте в документации правильный путь для статуса
         url = f"{PLATEGA_API_URL}/v2/transaction/status"
         
         payload = {
@@ -144,7 +151,6 @@ def cancel_payment(order_id):
         return {'error': 'Platega не настроен', 'status': 'error'}
     
     try:
-        # Проверьте в документации правильный путь для отмены
         url = f"{PLATEGA_API_URL}/v2/transaction/cancel"
         
         payload = {
